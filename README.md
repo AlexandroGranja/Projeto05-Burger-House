@@ -1,57 +1,271 @@
-# 🍔 Burger House - Cardápio Digital & Sistema de Pedidos
+# 🍔 Burger House - Guia de Instalação
 
-<p align="center">
-  <strong>Landing page completa e funcional para hamburguerias, construída com React e Flask, com um sistema de pedidos integrado.</strong>
-</p>
+Landing page completa e funcional para hamburguerias, construída com **React** (Frontend) e **Flask** (Backend), com sistema de pedidos integrado.
 
-<p align="center">
-  <img src="https://img.shields.io/badge/react-%2320232A.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB" alt="React">
-  <img src="https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS">
-  <img src="https://img.shields.io/badge/python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white" alt="Flask">
-  <img src="https://img.shields.io/github/license/AlexandroGranja/Projeto05-Burger-House?style=for-the-badge" alt="Licença MIT">
-  <img src="https://img.shields.io/github/stars/AlexandroGranja/Projeto05-Burger-House?style=for-the-badge&logo=github" alt="Stars">
-</p>
+![Burger House](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black) ![Flask](https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white) ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 
-<p align="center">
-  <a href="#-sobre-o-projeto">Sobre</a> •
-  <a href="#-principais-funcionalidades">Funcionalidades</a> •
-  <a href="#-para-rodar-o-projeto-localmente">Como Rodar</a> •
-  <a href="#-tecnologias">Tecnologias</a> •
-  <a href="#-autor">Autor</a>
-</p>
+## 📋 Pré-requisitos
 
-<p align="center">
-  <img src="https://github.com/user-attachments/assets/106ad178-090f-4116-894c-3070cda6419e" alt="Demonstração do Burger House em ação" width="800"/>
-</p>
+Antes de começar, certifique-se de ter instalado em sua máquina:
 
+- **Node.js** (versão 16 ou superior) - [Download aqui](https://nodejs.org/)
+- **Python** (versão 3.8 - 3.11 recomendado) - [Download aqui](https://www.python.org/)
+- **Git** - [Download aqui](https://git-scm.com/)
+- **VS Code** (recomendado) - [Download aqui](https://code.visualstudio.com/)
 
-## 📖 Sobre o Projeto
+### ✅ Verificar se está tudo instalado:
 
-O **Burger House** é um projeto full-stack que simula o site de uma hamburgueria artesanal. Ele foi desenvolvido como uma ferramenta prática para aprender e demonstrar a integração entre um frontend moderno com **React** e um backend robusto com **Python/Flask**. A aplicação permite que os clientes visualizem o cardápio, adicionem itens com diferentes opções ao carrinho e finalizem o pedido, que é registrado no backend.
-
-## ✨ Principais Funcionalidades
-
-- [x] **Cardápio Interativo:** Navegação fluida entre hambúrgueres e acompanhamentos.
-- [x] **Opções de Itens:** Seleção de variações para itens como batatas (P, M, G) e refrigerantes (Lata, 2L).
-- [x] **Carrinho de Compras Dinâmico:** Adicione, remova e atualize a quantidade de itens em tempo real.
-- [x] **Checkout Simplificado:** Formulário para coleta de dados do cliente e detalhes da entrega.
-- [x] **API RESTful:** Backend construído com Flask para gerenciar os pedidos.
-- [x] **Persistência de Dados:** Pedidos são salvos em formato JSON no servidor.
-- [x] **Design Responsivo:** Experiência otimizada para desktops e dispositivos móveis.
-- [x] **Código Organizado:** Frontend refatorado em componentes para melhor manutenibilidade.
-
-## 🛠️ Para Rodar o Projeto Localmente
-
-Siga os passos abaixo para ter o projeto rodando na sua máquina.
-
-### Pré-requisitos
-* **Node.js** (v16+) e npm
-* **Python** (v3.8 - v3.11 recomendado) e pip
-* **Git**
-
-### 1. Clone o Repositório
 ```bash
-git clone https://github.com/AlexandroGranja/Projeto05-Burger-House.git
-cd Projeto05-Burger-House
+node --version
+npm --version
+python --version
+git --version
+```
 
+## 🚀 Instalação
+
+### 1️⃣ **Clonar o Repositório**
+
+```bash
+# Clone o projeto
+git clone https://github.com/AlexandroGranja/Projeto05-Burger-House.git
+
+# Entre na pasta do projeto
+cd Projeto05-Burger-House
+```
+
+### 2️⃣ **Abrir no VS Code**
+
+```bash
+# Abra o projeto no VS Code
+code .
+```
+
+### 3️⃣ **Configurar o Backend (Flask/Python)**
+
+**No terminal integrado do VS Code:**
+
+```bash
+# Crie um ambiente virtual Python
+python -m venv venv
+
+# Ative o ambiente virtual
+# Windows (CMD):
+venv\Scripts\activate
+
+# Windows (PowerShell):
+venv\Scripts\Activate.ps1
+
+# Linux/Mac:
+source venv/bin/activate
+```
+
+**Instalar dependências do backend:**
+
+```bash
+# Instale as dependências básicas
+pip install flask flask-cors python-dotenv
+
+# Se existir um arquivo requirements.txt na pasta backend:
+cd backend
+pip install -r requirements.txt
+cd ..
+```
+
+### 4️⃣ **Configurar o Frontend (React/Node.js)**
+
+**Em um novo terminal (mantendo o backend ativo):**
+
+```bash
+# Instale as dependências do Node.js
+npm install
+
+# Se houver problemas, tente:
+npm install --legacy-peer-deps
+```
+
+## ▶️ Executando o Projeto
+
+### 🔧 **Iniciar o Backend**
+
+**Terminal 1 - Backend Flask:**
+
+```bash
+# Certifique-se de que o ambiente virtual está ativo
+# Você deve ver (venv) no início da linha
+
+# Navegue para a pasta backend
+cd backend
+
+# Execute o servidor Flask
+python app.py
+
+# Ou alternativamente:
+flask run
+```
+
+✅ **Backend estará rodando em:** `http://localhost:5000`
+
+### 🎨 **Iniciar o Frontend**
+
+**Terminal 2 - Frontend React:**
+
+```bash
+# Certifique-se de estar na pasta raiz do projeto
+# (não dentro da pasta backend)
+
+# Inicie o servidor de desenvolvimento React
+npm start
+```
+
+✅ **Frontend estará rodando em:** `http://localhost:3000`
+
+## 🌐 Acessando a Aplicação
+
+- **Site da Hamburgueria:** http://localhost:3000
+- **API Backend:** http://localhost:5000
+- **Documentação da API:** http://localhost:5000/api
+
+## 🏗️ Estrutura do Projeto
+
+```
+Projeto05-Burger-House/
+├── 📁 backend/              # Código do servidor Flask
+│   ├── app.py              # Arquivo principal do Flask
+│   ├── requirements.txt    # Dependências Python
+│   └── ...
+├── 📁 src/                 # Código React
+│   ├── components/         # Componentes React
+│   ├── pages/             # Páginas da aplicação
+│   ├── styles/            # Arquivos de estilo
+│   └── App.js             # Componente principal
+├── 📁 public/             # Arquivos públicos
+├── 📁 node_modules/       # Dependências Node.js
+├── 📁 venv/               # Ambiente virtual Python
+├── package.json           # Configurações e dependências npm
+├── package-lock.json      # Lock das dependências npm
+└── README.md             # Este arquivo
+```
+
+## 🛠️ Comandos Úteis
+
+### Para o Frontend (React):
+```bash
+npm start          # Inicia o servidor de desenvolvimento
+npm run build      # Cria build de produção
+npm test           # Executa os testes
+npm install        # Instala dependências
+```
+
+### Para o Backend (Flask):
+```bash
+python app.py      # Inicia o servidor Flask
+flask run          # Alternativa para iniciar o Flask
+pip freeze         # Lista dependências instaladas
+pip install <nome> # Instala nova dependência
+```
+
+### Gerenciar Ambiente Virtual:
+```bash
+# Ativar ambiente virtual:
+venv\Scripts\activate      # Windows
+source venv/bin/activate   # Linux/Mac
+
+# Desativar ambiente virtual:
+deactivate
+```
+
+## 🔧 Solucionando Problemas
+
+### ❌ **Frontend com tela em branco**
+```bash
+# Limpe o cache e reinstale
+rm -rf node_modules package-lock.json  # Linux/Mac
+rmdir /s node_modules && del package-lock.json  # Windows
+npm install
+npm start
+```
+
+### ❌ **Erro "Flask application not found"**
+```bash
+# Certifique-se de estar na pasta backend
+cd backend
+python app.py
+```
+
+### ❌ **Erro de CORS**
+```bash
+# Instale flask-cors
+pip install flask-cors
+```
+
+### ❌ **Porta já está em uso**
+```bash
+# Frontend em porta diferente:
+npm start -- --port 3001
+
+# Backend em porta diferente:
+flask run --port 5001
+```
+
+### ❌ **Problemas com ambiente virtual**
+```bash
+# Delete e recrie o ambiente virtual
+rmdir /s venv  # Windows
+rm -rf venv    # Linux/Mac
+
+python -m venv venv
+venv\Scripts\activate  # Windows
+pip install flask flask-cors
+```
+
+## 🔒 Extensões Recomendadas para VS Code
+
+Para melhor experiência de desenvolvimento:
+
+- **ES7+ React/Redux/React-Native snippets**
+- **Python** (Microsoft)
+- **Pylance**
+- **Auto Rename Tag**
+- **Bracket Pair Colorizer**
+- **GitLens**
+- **Live Server**
+
+## 📚 Funcionalidades
+
+- ✅ Cardápio interativo com hambúrgueres e acompanhamentos
+- ✅ Carrinho de compras dinâmico
+- ✅ Sistema de pedidos integrado
+- ✅ API RESTful para gerenciar pedidos
+- ✅ Design responsivo
+- ✅ Persistência de dados em JSON
+
+## 🤝 Contribuindo
+
+1. Faça um fork do projeto
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
+5. Abra um Pull Request
+
+## 📄 Licença
+
+Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+
+## 👨‍💻 Autor
+
+**Alexandro Granja**
+- GitHub: [@AlexandroGranja](https://github.com/AlexandroGranja)
+
+---
+
+## 🆘 Precisa de Ajuda?
+
+Se encontrar algum problema durante a instalação:
+
+1. Verifique se todos os pré-requisitos estão instalados
+2. Certifique-se de estar nas pastas corretas ao executar os comandos
+3. Verifique se as portas 3000 e 5000 estão livres
+4. Consulte a seção "Solucionando Problemas" acima
+
+**Happy Coding! 🍔✨**
