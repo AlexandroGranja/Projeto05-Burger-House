@@ -47,7 +47,7 @@ export const sides = [
   { 
     id: 7, 
     name: "Batata Frita",
-    image: "/images/sides-fries.jpg",
+    image: "/images/Onion.png",
     variants: [
       { size: "Pequena", price: 8.90 },
       { size: "Média", price: 12.90 },
@@ -58,17 +58,7 @@ export const sides = [
     id: 8, 
     name: "Onion Rings", 
     price: 15.90,
-    image: "/images/sides-onion-rings.jpg"
+    image: "images/Onion.png"
   },
-  { 
-    id: 10, 
-    name: "Refrigerante",
-    image: "/images/sides-soda.jpg",
-    variants: [
-      { size: "Coca-Cola (Lata)", price: 6.90 },
-      { size: "Guaraná (Lata)", price: 6.50 },
-      { size: "Coca-Cola (2L)", price: 12.00 },
-      { size: "Guaraná (2L)", price: 11.00 },
-    ]
-  }
+
 ];
