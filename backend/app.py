@@ -4,8 +4,8 @@ from flask_cors import CORS
 import json
 import os
 from datetime import datetime
-# import pywhatkit as kit  # <- ESSA LINHA CONTINUA COMENTADA
 import time
+import requests   # 🚀 Novo import para mandar pedido ao n8n
 
 app = Flask(__name__)
 CORS(app)  # CORS foi reativado
@@ -15,9 +15,11 @@ ORDERS_DIR = 'orders'
 if not os.path.exists(ORDERS_DIR):
     os.makedirs(ORDERS_DIR)
 
+# URL do Webhook n8n
+N8N_WEBHOOK_URL = "https://alexandro-granja.up.railway.app/webhook/order-status-update"
+
 @app.route('/')
 def home():
-    # Usamos o jsonify que foi importado novamente
     return jsonify({"message": "API Burger House funcionando!"})
 
 @app.route('/api/orders', methods=['POST'])
@@ -34,18 +36,17 @@ def create_order():
             json.dump(order_data, f, ensure_ascii=False, indent=2)
         
         # --- NOTIFICAÇÃO NO TERMINAL ---
-        # Como o WhatsApp está desativado, vamos imprimir o pedido no terminal
-        # para que você saiba que um novo pedido chegou.
         print("\n--- ✅ NOVO PEDIDO RECEBIDO ---")
         print(json.dumps(order_data, indent=2, ensure_ascii=False))
         print("--------------------------------\n")
-        
-        # A chamada para a função do WhatsApp continua desativada
-        # try:
-        #     send_whatsapp_message(order_data)
-        # except Exception as e:
-        #     print(f"Erro ao tentar enviar WhatsApp: {e}")
-        
+
+        # --- 🚀 ENVIA PEDIDO PARA N8N ---
+        try:
+            requests.post(N8N_WEBHOOK_URL, json=order_data, timeout=5)
+            print("✅ Pedido enviado para n8n com sucesso!")
+        except Exception as e:
+            print(f"⚠️ Erro ao enviar pedido para n8n: {e}")
+
         return jsonify({
             "status": "success", 
             "message": "Pedido criado com sucesso!",
@@ -58,7 +59,6 @@ def create_order():
             "message": f"Erro ao criar pedido: {str(e)}"
         }), 500
 
-# Todas as outras funções continuam iguais
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
     try:
@@ -89,7 +89,6 @@ def update_order_status(order_id):
     except Exception as e:
         return jsonify({"status": "error", "message": f"Erro ao atualizar pedido: {str(e)}"}), 500
 
-# A função abaixo não será chamada, mas podemos deixá-la para referência futura
 def format_order_message(order_data):
     customer = order_data['customer']
     items = order_data['items']
@@ -102,9 +101,8 @@ def format_order_message(order_data):
     message += "\n\n🛒 *Itens do Pedido:*"
     for item in items:
         message += f"\n• {item['quantity']}x {item['name']} - R$ {(item['price'] * item['quantity']):.2f}"
-    message += f"\n\n💰 *Total: R$ {total:.2f}* | 💳 *Pagamento:* {customer['paymentMethod'].title()}"
+    message += f"\n\n💰 *Total: R$ {total:.2f}* | 💳 *Pagamento:* {customer['paymentMethod'].title()}"""
     return message
 
-# O debug=True foi reativado, o que é útil para desenvolvimento
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

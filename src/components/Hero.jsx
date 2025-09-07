@@ -5,7 +5,6 @@ import burgercalabresa from '../assets/burger-calabresa.jpg';
 import burgerchicken from '../assets/burger-chicken.jpg';
 
 const Hero = () => {
-  // Carousel state
   const [currentSlide, setCurrentSlide] = useState(0);
   const promotions = [
     {
@@ -28,15 +27,13 @@ const Hero = () => {
     },
   ];
 
-  // Auto-scroll effect
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % promotions.length);
-    }, 5000); // Change slide every 5 seconds
+    }, 5000);
     return () => clearInterval(interval);
   }, [promotions.length]);
 
-  // Navigation functions
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev === 0 ? promotions.length - 1 : prev - 1));
   };
@@ -56,12 +53,16 @@ const Hero = () => {
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400"></div>
 
       <div className="relative z-10 container mx-auto px-4 text-center">
-        <h2 className="text-5xl font-black bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent hover:from-yellow-300 hover:via-orange-400 hover:to-red-400 transition-all duration-500 mb-4">
-          Os Melhores Hambúrguers da Cidade
-        </h2>
+        <div className="mb-7 px-4">
+          <h2 className="text-4xl md:text-5xl font-black bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent pb-1 leading-tight">
+            Os Melhores Hambúrguers da Cidade
+          </h2>
+        </div>
+        
         <p className="text-xl mb-8 text-red-200 font-semibold tracking-wide">
           Ingredientes frescos, receitas exclusivas e muito sabor!
         </p>
+        
         <div className="flex justify-center items-center gap-4 mb-8">
           <div className="flex text-yellow-400">
             {[...Array(5)].map((_, i) => (
@@ -126,21 +127,20 @@ const Hero = () => {
 
           {/* Carousel Indicators */}
           <div className="flex justify-center gap-2 mt-4">
-  {promotions.map((_, index) => (
-    <button
-      key={index}
-      aria-label={`Ir para promoção ${index + 1}`}
-      className={`w-3 h-3 rounded-full transition-all duration-300 ${
-        currentSlide === index
-          ? 'bg-yellow-400 scale-125'
-          : 'bg-red-700/50 hover:bg-red-700/80'
-      }`}
-      onClick={() => setCurrentSlide(index)}
-    />
-  ))}
-</div>
+            {promotions.map((_, index) => (
+              <button
+                key={index}
+                aria-label={`Ir para promoção ${index + 1}`}
+                className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                  currentSlide === index
+                    ? 'bg-yellow-400 scale-125'
+                    : 'bg-red-700/50 hover:bg-red-700/80'
+                }`}
+                onClick={() => setCurrentSlide(index)}
+              />
+            ))}
+          </div>
         </div>
-
       </div>
     </section>
   );
