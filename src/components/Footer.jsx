@@ -91,13 +91,13 @@ const Footer = () => {
             <span className="text-red-200">
               Desenvolvido por{' '}
               <a 
-                href="https://alexandrogranja.github.io/Portfolio/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-yellow-400 hover:text-yellow-300 transition-colors"
-              >
-                Alexandro Granja
-              </a>
+  href="https://alexandrogranja.github.io/Portfolio/" 
+  target="_blank" 
+  rel="noopener noreferrer"
+  className="font-semibold text-yellow-400 hover:text-yellow-300 transition-colors duration-200 hover:underline underline-offset-2"
+>
+  Alexandro Granja
+</a>
             </span>
           </p>
         </div>
