@@ -8,7 +8,7 @@ const Footer = () => {
       <div className="absolute inset-0 opacity-30">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBzdHJva2U9IiM3ZjFhMWEiIHN0cm9rZS13aWR0aD0iMC41IiBzdHJva2Utb3BhY2l0eT0iMC4zIj48cGF0aCBkPSJNIDAgMCBMIDYwIDYwIE0gNjAgMCBMIDAgNjAiLz48L2c+PC9zdmc+')]"></div>
       </div>
-      
+
       {/* Gradient Border Top (ÚNICA linha divisória) */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400"></div>
 
@@ -90,18 +90,17 @@ const Footer = () => {
             © 2025 Burger House. Todos os direitos reservados.{' '}
             <span className="text-red-200">
               Desenvolvido por{' '}
-              <a 
-  href="https://alexandrogranja.github.io/Portfolio/" 
-  target="_blank" 
-  rel="noopener noreferrer"
-  className="font-semibold text-yellow-400 hover:text-yellow-300 transition-colors duration-200 hover:underline underline-offset-2"
->
-  Alexandro Granja
-</a>
+              <a
+                href="https://alexandrogranja.github.io/Portfolio/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-yellow-400 hover:text-yellow-300 transition-colors duration-200 hover:underline underline-offset-2"
+              >
+                Alexandro Granja
+              </a>
             </span>
           </p>
         </div>
-      </div>
     </footer>
   );
 };
