@@ -84,13 +84,11 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Copyright */}
+        {/* Copyright - LINHA ÚNICA */}
         <div className="text-center pt-8 border-t border-red-800/30">
-          <div className="flex items-center justify-center gap-1 mb-2 text-red-200">
-            <span>Desenvolvido por</span>
-            <strong className="font-semibold text-red-200">Alexandro Granja</strong>
-          </div>
-          <p className="text-red-300 text-sm">© 2025 Burger House. Todos os direitos reservados.</p>
+          <p className="text-red-300 text-sm">
+            © 2025 Burger House. Desenvolvido por Alexandro Granja
+          </p>
         </div>
       </div>
     </footer>
