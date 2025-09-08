@@ -3,13 +3,13 @@ import { MapPin, Phone, Clock, Instagram, Facebook, Mail } from 'lucide-react';
 
 const Footer = () => {
   return (
-    <footer className="relative py-16 bg-gradient-to-b from-gray-950 via-red-950 to-gray-950 overflow-hidden text-white border-t border-red-800/50">
+    <footer className="relative py-16 bg-gradient-to-b from-gray-950 via-red-950 to-gray-950 overflow-hidden text-white">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBzdHJva2U9IiM3ZjFhMWEiIHN0cm9rZS13aWR0aD0iMC41IiBzdHJva2Utb3BhY2l0eT0iMC4zIj48cGF0aCBdPSJNIDAgMCBMIDYwIDYwIE0gNjAgMCBMIDAgNjAiLz48L2c+PC9zdmc+')]"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBzdHJva2U9IiM3ZjFhMWEiIHN0cm9rZS13aWR0aD0iMC41IiBzdHJva2Utb3BhY2l0eT0iMC4zIj48cGF0aCBkPSJNIDAgMCBMIDYwIDYwIE0gNjAgMCBMIDAgNjAiLz48L2c+PC9zdmc+')]"></div>
       </div>
       
-      {/* Gradient Border Top */}
+      {/* Gradient Border Top (ÚNICA linha divisória) */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-yellow-400 via-orange-500 to-yellow-400"></div>
 
       <div className="relative z-10 container mx-auto px-4">
@@ -84,18 +84,21 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Copyright - COM LINK PARA SEU PORTFOLIO */}
-        <div className="text-center pt-8 border-t border-red-800/30">
+        {/* Copyright - Estilo mais profissional */}
+        <div className="text-center pt-8">
           <p className="text-red-300 text-sm">
-            © 2025 Burger House. Todos os direitos reservados. Desenvolvido por {' '}
-            <a 
-              href="https://alexandrogranja.github.io/Portfolio/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-yellow-400 hover:text-yellow-300 underline transition-colors"
-            >
-              Alexandro Granja
-            </a>
+            © 2025 Burger House. Todos os direitos reservados.{' '}
+            <span className="text-red-200">
+              Desenvolvido por{' '}
+              <a 
+                href="https://alexandrogranja.github.io/Portfolio/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-yellow-400 hover:text-yellow-300 transition-colors"
+              >
+                Alexandro Granja
+              </a>
+            </span>
           </p>
         </div>
       </div>
