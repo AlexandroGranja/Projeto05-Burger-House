@@ -6,7 +6,7 @@ const Footer = () => {
     <footer className="relative py-16 bg-gradient-to-b from-gray-950 via-red-950 to-gray-950 overflow-hidden text-white border-t border-red-800/50">
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-30">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBzdHJva2U9IiM3ZjFhMWEiIHN0cm9rZS13aWR0aD0iMC41IiBzdHJva2Utb3BhY2l0eT0iMC4zIj48cGF0aCBkPSJNIDAgMCBMIDYwIDYwIE0gNjAgMCBMIDAgNjAiLz48L2c+PC9zdmc+')]"></div>
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBzdHJva2U9IiM3ZjFhMWEiIHN0cm9rZS13aWR0aD0iMC41IiBzdHJva2Utb3BhY2l0eT0iMC4zIj48cGF0aCBdPSJNIDAgMCBMIDYwIDYwIE0gNjAgMCBMIDAgNjAiLz48L2c+PC9zdmc+')]"></div>
       </div>
       
       {/* Gradient Border Top */}
@@ -84,10 +84,18 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Copyright - LINHA ÚNICA */}
+        {/* Copyright - COM LINK PARA SEU PORTFOLIO */}
         <div className="text-center pt-8 border-t border-red-800/30">
           <p className="text-red-300 text-sm">
-            © 2025 Burger House. Desenvolvido por Alexandro Granja
+            © 2025 Burger House. Todos os direitos reservados. Desenvolvido por {' '}
+            <a 
+              href="https://alexandrogranja.github.io/Portfolio/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-yellow-400 hover:text-yellow-300 underline transition-colors"
+            >
+              Alexandro Granja
+            </a>
           </p>
         </div>
       </div>
