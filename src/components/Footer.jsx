@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Phone, Clock, Heart, Instagram, Facebook, Mail } from 'lucide-react';
+import { MapPin, Phone, Clock, Instagram, Facebook, Mail } from 'lucide-react';
 
 const Footer = () => {
   return (
@@ -58,13 +58,13 @@ const Footer = () => {
           <div className="bg-red-900/20 backdrop-blur-sm border border-red-700/30 rounded-xl p-6">
             <h3 className="text-xl font-bold bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent mb-4">Siga-nos</h3>
             <div className="flex gap-4">
-              <a href="#" className="bg-red-800/40 hover:bg-red-700/60 p-3 rounded-full transition-all duration-300 border border-red-700/30">
+              <a href="#" role="button" className="bg-red-800/40 hover:bg-red-700/60 p-3 rounded-full transition-all duration-300 border border-red-700/30">
                 <Instagram size={20} className="text-yellow-400" />
               </a>
-              <a href="#" className="bg-red-800/40 hover:bg-red-700/60 p-3 rounded-full transition-all duration-300 border border-red-700/30">
+              <a href="#" role="button" className="bg-red-800/40 hover:bg-red-700/60 p-3 rounded-full transition-all duration-300 border border-red-700/30">
                 <Facebook size={20} className="text-yellow-400" />
               </a>
-              <a href="#" className="bg-red-800/40 hover:bg-red-700/60 p-3 rounded-full transition-all duration-300 border border-red-700/30">
+              <a href="#" role="button" className="bg-red-800/40 hover:bg-red-700/60 p-3 rounded-full transition-all duration-300 border border-red-700/30">
                 <Phone size={20} className="text-yellow-400" />
               </a>
             </div>
@@ -88,7 +88,7 @@ const Footer = () => {
         <div className="text-center pt-8 border-t border-red-800/30">
           <div className="flex items-center justify-center gap-1 mb-2 text-red-200">
             <span>Desenvolvido por</span>
-    <strong className="font-semibold text-red-200">Alexandro Granja</strong>
+            <strong className="font-semibold text-red-200">Alexandro Granja</strong>
           </div>
           <p className="text-red-300 text-sm">© 2025 Burger House. Todos os direitos reservados.</p>
         </div>
