@@ -10,11 +10,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Create Flask app with static folder pointing to React build
-# O caminho para o static_folder deve ser relativo ao diretório onde o app.py está.
-# Se app.py está em 'backend/' e 'build' está em 'frontend/build',
-# então o caminho relativo é '../frontend/build'.
-# A linha abaixo foi ajustada para refletir o caminho correto para a pasta de build do frontend.
-app = Flask(__name__, static_folder='static', static_url_path='/')
+app = Flask(__name__, static_folder='../frontend/build', static_url_path='/')
 
 # Configure CORS
 CORS(app)
@@ -23,9 +19,8 @@ CORS(app)
 ORDERS_DIR = 'orders'
 os.makedirs(ORDERS_DIR, exist_ok=True)
 
-# Startup checks
-@app.before_first_request
-def startup_check():
+# Startup checks - usando app_context em vez de before_first_request
+with app.app_context():
     logger.info("🍔 Burger House API starting...")
     logger.info(f"📦 Static folder: {app.static_folder}")
     logger.info(f"📂 Working directory: {os.getcwd()}")

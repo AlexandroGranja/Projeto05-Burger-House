@@ -31,8 +31,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy backend code
 COPY backend/ .
 
-# Copy built frontend from build stage
-COPY --from=build-frontend /app/frontend/build ../frontend/build
+# ✅✅✅ CORREÇÃO AQUI: Mude para ./static ✅✅✅
+COPY --from=build-frontend /app/frontend/build ./static
 
 # Configure Flask to serve React static files
 ENV FLASK_APP=app.py
@@ -41,7 +41,7 @@ ENV PORT=${PORT:-8080}
 
 EXPOSE $PORT
 
-# Health check (simplificado)
+# Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:${PORT}/ || exit 1
 
