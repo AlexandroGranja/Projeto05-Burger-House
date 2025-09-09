@@ -1,36 +1,67 @@
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, send_file
 from flask_cors import CORS
 import os
 import json
 from datetime import datetime
+import logging
 
-app = Flask(__name__, static_folder='../frontend/build')
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-# Configurar CORS
-CORS(app, origins=["*"])  # Em produção, especifique o domínio
+# Create Flask app with static folder pointing to React build
+app = Flask(__name__, static_folder='static', static_url_path='')
 
-# Diretório para salvar pedidos
+# Configure CORS
+CORS(app)
+
+# Create orders directory if it doesn't exist
 ORDERS_DIR = 'orders'
-if not os.path.exists(ORDERS_DIR):
-    os.makedirs(ORDERS_DIR)
+os.makedirs(ORDERS_DIR, exist_ok=True)
 
-@app.route('/health')
+# Startup checks
+@app.before_first_request
+def startup_check():
+    logger.info("🍔 Burger House API starting...")
+    logger.info(f"📁 Static folder: {app.static_folder}")
+    logger.info(f"📂 Working directory: {os.getcwd()}")
+    
+    # List contents of current directory
+    logger.info("📋 Directory contents:")
+    for item in os.listdir('.'):
+        logger.info(f"   {item}")
+    
+    # Check static folder
+    if os.path.exists(app.static_folder):
+        logger.info(f"✅ Static folder exists: {app.static_folder}")
+        static_files = os.listdir(app.static_folder)
+        logger.info(f"📄 Static files: {static_files}")
+        
+        if 'index.html' in static_files:
+            logger.info("✅ index.html found")
+        else:
+            logger.warning("⚠️ index.html not found in static folder")
+    else:
+        logger.error(f"❌ Static folder not found: {app.static_folder}")
+
+# API Routes
+@app.route('/api/health')
 def health_check():
     return jsonify({
         "status": "healthy",
-        "message": "🍔 Burger House API funcionando!",
-        "timestamp": datetime.now().isoformat()
+        "message": "🍔 Burger House API is running!",
+        "timestamp": datetime.now().isoformat(),
+        "static_folder_exists": os.path.exists(app.static_folder),
+        "index_html_exists": os.path.exists(os.path.join(app.static_folder, 'index.html')) if os.path.exists(app.static_folder) else False
     })
 
-@app.route('/')
-def home():
+@app.route('/api/test')
+def test_endpoint():
     return jsonify({
-        "message": "🍔 Bem-vindo ao Burger House API",
-        "endpoints": {
-            "/health": "Health check",
-            "/api/burgers": "Lista de hambúrgueres",
-            "/api/orders": "Criar pedido (POST)"
-        }
+        "message": "Test endpoint working!",
+        "cwd": os.getcwd(),
+        "static_folder": app.static_folder,
+        "files_in_static": os.listdir(app.static_folder) if os.path.exists(app.static_folder) else "Static folder not found"
     })
 
 @app.route('/api/burgers')
@@ -40,12 +71,12 @@ def get_burgers():
             "id": 1,
             "name": "Big Burger",
             "price": 25.99,
-            "description": "Hambúrguer artesanal com carne 200g, queijo cheddar, alface, tomate e molho especial",
+            "description": "Hambúrguer artesanal com carne 200g, queijo cheddar, alface e tomate",
             "image": "/images/big-burger.jpg"
         },
         {
             "id": 2,
-            "name": "Cheese Burger",
+            "name": "Cheese Burger", 
             "price": 19.99,
             "description": "Hambúrguer clássico com carne 150g e queijo derretido",
             "image": "/images/cheese-burger.jpg"
@@ -56,83 +87,88 @@ def get_burgers():
             "price": 22.99,
             "description": "Hambúrguer de frango grelhado com maionese temperada",
             "image": "/images/chicken-burger.jpg"
-        },
-        {
-            "id": 4,
-            "name": "Veggie Burger",
-            "price": 18.99,
-            "description": "Hambúrguer vegetariano com blend de grãos e legumes",
-            "image": "/images/veggie-burger.jpg"
         }
     ]
-    return jsonify(burgers)
+    return jsonify({"burgers": burgers})
 
 @app.route('/api/orders', methods=['POST'])
 def create_order():
     try:
-        order_data = request.get_json()
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
         
-        if not order_data:
-            return jsonify({"error": "Dados do pedido não fornecidos"}), 400
-        
-        # Gerar ID único para o pedido
         order_id = f"order_{int(datetime.now().timestamp())}"
-        
-        # Adicionar informações do pedido
         order = {
             "id": order_id,
             "timestamp": datetime.now().isoformat(),
-            "items": order_data.get('items', []),
-            "customer": order_data.get('customer', {}),
-            "total": order_data.get('total', 0),
-            "status": "received"
+            "items": data.get('items', []),
+            "customer": data.get('customer', {}),
+            "total": data.get('total', 0),
+            "status": "confirmed"
         }
         
-        # Salvar pedido em arquivo JSON
-        order_file = os.path.join(ORDERS_DIR, f"{order_id}.json")
-        with open(order_file, 'w') as f:
+        # Save order to JSON file
+        with open(os.path.join(ORDERS_DIR, f"{order_id}.json"), 'w') as f:
             json.dump(order, f, indent=2)
         
+        logger.info(f"📝 Order created: {order_id}")
+        
         return jsonify({
-            "message": "Pedido criado com sucesso!",
+            "success": True,
+            "message": "Pedido confirmado!",
             "order_id": order_id,
-            "estimated_time": "30-45 minutos"
-        }), 201
+            "estimated_time": "30-45 minutes"
+        })
         
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logger.error(f"Error creating order: {str(e)}")
+        return jsonify({"error": "Failed to create order"}), 500
 
-@app.route('/api/orders/<order_id>')
-def get_order(order_id):
-    try:
-        order_file = os.path.join(ORDERS_DIR, f"{order_id}.json")
-        if os.path.exists(order_file):
-            with open(order_file, 'r') as f:
-                order = json.load(f)
-            return jsonify(order)
-        else:
-            return jsonify({"error": "Pedido não encontrado"}), 404
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-# Servir arquivos estáticos do React (fallback)
+# Serve React App (catch all routes)
+@app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def serve_react_app(path):
+    # If it's an API route that doesn't exist, return 404
+    if path.startswith('api/'):
+        return jsonify({"error": "API endpoint not found"}), 404
+    
+    # Try to serve static file first
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
         return send_from_directory(app.static_folder, path)
-    else:
-        return send_from_directory(app.static_folder, 'index.html')
+    
+    # Otherwise serve index.html (React Router will handle routing)
+    try:
+        index_path = os.path.join(app.static_folder, 'index.html')
+        if os.path.exists(index_path):
+            return send_file(index_path)
+        else:
+            logger.error(f"index.html not found at {index_path}")
+            return jsonify({
+                "error": "Frontend not available",
+                "message": "React app build files not found",
+                "debug_info": {
+                    "static_folder": app.static_folder,
+                    "index_path": index_path,
+                    "static_folder_exists": os.path.exists(app.static_folder),
+                    "static_contents": os.listdir(app.static_folder) if os.path.exists(app.static_folder) else None
+                }
+            }), 404
+    except Exception as e:
+        logger.error(f"Error serving React app: {str(e)}")
+        return jsonify({"error": "Server error", "message": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    host = '0.0.0.0'
+    port = int(os.environ.get('PORT', 8000))
     
-    print(f"🚀 Iniciando Burger House API em {host}:{port}")
-    print(f"📁 Diretório de pedidos: {ORDERS_DIR}")
+    print("🍔 Starting Burger House Application")
+    print(f"📡 Server running on port {port}")
+    print(f"📁 Static folder: {app.static_folder}")
+    print(f"📦 Orders directory: {ORDERS_DIR}")
+    print(f"🌍 Environment PORT: {os.environ.get('PORT', 'Not set')}")
     
     app.run(
-        host=host,
+        host='0.0.0.0',
         port=port,
-        debug=False,  # Nunca use debug=True em produção
-        threaded=True
+        debug=False
     )

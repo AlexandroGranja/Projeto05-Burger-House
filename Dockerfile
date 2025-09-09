@@ -1,56 +1,47 @@
-# Stage 1: Build Frontend
-FROM node:18-alpine as frontend-build
+# Build stage for React frontend
+FROM node:18-alpine as build-frontend
 WORKDIR /app/frontend
 
-# Copiar package.json do frontend
+# Copy package files
 COPY frontend/package*.json ./
 
-# Instalar dependências
-RUN npm install
+# Install dependencies with verbose logging
+RUN npm install --verbose
 
-# Copiar código fonte do frontend
+# Copy frontend source
 COPY frontend/ ./
 
-# Build da aplicação React
-RUN npm run build
+# Build with verbose output
+RUN npm run build --verbose
 
-# Stage 2: Production Image
+# List build output for debugging
+RUN ls -la build/
+
+# Production stage
 FROM python:3.9-slim
-
-# Instalar Node.js
-RUN apt-get update && \
-    apt-get install -y curl && \
-    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
-    apt-get install -y nodejs && \
-    npm install -g serve && \
-    rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app
 
-# Copiar e instalar dependências Python
-COPY backend/requirements.txt ./
+# Install system dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copy and install Python dependencies
+COPY backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copiar código do backend
-COPY backend/ ./backend/
+# Copy backend code
+COPY backend/ ./
 
-# Copiar build do frontend
-COPY --from=frontend-build /app/frontend/build ./frontend/build/
+# Copy built frontend
+COPY --from=build-frontend /app/frontend/build ./static
 
-# Criar script simplificado de inicialização
-RUN echo '#!/bin/bash\n\
-echo "Iniciando Burger House..."\n\
-python backend/app.py &\n\
-BACKEND_PID=$!\n\
-echo "Backend iniciado (PID: $BACKEND_PID)"\n\
-sleep 5\n\
-serve -s frontend/build -l ${PORT:-3000} &\n\
-FRONTEND_PID=$!\n\
-echo "Frontend servindo na porta ${PORT:-3000} (PID: $FRONTEND_PID)"\n\
-wait' > start.sh && chmod +x start.sh
+# Verify static files were copied
+RUN ls -la static/ || echo "No static files found!"
 
-# Usar a porta do Railway
-EXPOSE ${PORT:-3000}
+# Use PORT from Railway environment
+ENV PORT=${PORT:-8000}
+EXPOSE $PORT
 
-# Comando de inicialização
-CMD ["./start.sh"]
+# Start Python directly (more reliable than shell script)
+CMD ["python", "app.py"]
