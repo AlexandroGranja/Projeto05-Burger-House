@@ -50,5 +50,6 @@
   "license": "MIT",
   "devDependencies": {
     "tailwindcss": "^4.1.10"
-  }
+  },
+  "proxy": "http://localhost:5000"
 }
