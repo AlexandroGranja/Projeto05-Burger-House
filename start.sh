@@ -1,33 +1,42 @@
 #!/bin/bash
 
-# Função para cleanup quando o script for interrompido
-cleanup() {
-    echo "Parando serviços..."
-    kill $(jobs -p) 2>/dev/null
-    exit 0
-}
+echo "🍔 Iniciando Burger House..."
 
-# Capturar sinais de interrupção
-trap cleanup SIGINT SIGTERM
+# Verificar se os arquivos existem
+if [ ! -f "backend/app.py" ]; then
+    echo "❌ Erro: backend/app.py não encontrado!"
+    exit 1
+fi
 
-echo "Iniciando aplicação fullstack..."
+if [ ! -d "frontend/build" ]; then
+    echo "❌ Erro: frontend/build não encontrado!"
+    exit 1
+fi
+
+# Obter porta do Railway ou usar padrão
+PORT=${PORT:-3000}
+echo "🌐 Usando porta: $PORT"
 
 # Iniciar backend em background
-echo "Iniciando backend Python..."
-cd /app/backend && python app.py &
+echo "🚀 Iniciando backend..."
+cd backend && python app.py &
 BACKEND_PID=$!
+cd ..
 
-# Aguardar um pouco para o backend inicializar
+# Aguardar backend inicializar
 sleep 5
 
-# Iniciar frontend
-echo "Iniciando frontend React..."
-cd /app && serve -s frontend/build -l 3000 &
-FRONTEND_PID=$!
+# Verificar se backend está rodando
+if ! kill -0 $BACKEND_PID 2>/dev/null; then
+    echo "❌ Backend falhou ao iniciar!"
+    exit 1
+fi
 
-echo "✅ Backend rodando em background (PID: $BACKEND_PID)"
-echo "✅ Frontend servindo em http://0.0.0.0:3000 (PID: $FRONTEND_PID)"
-echo "📱 Aplicação pronta!"
+echo "✅ Backend rodando (PID: $BACKEND_PID)"
 
-# Aguardar ambos os processos
-wait
+# Iniciar frontend na porta do Railway
+echo "🎨 Iniciando frontend na porta $PORT..."
+serve -s frontend/build -l $PORT
+
+# Se chegou aqui, o serve parou
+echo "⚠️ Frontend parou de rodar"

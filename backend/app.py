@@ -1,125 +1,138 @@
-# Imports restaurados, MENOS o pywhatkit
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
-import json
 import os
+import json
 from datetime import datetime
-import time
-import requests   # 🚀 Novo import para mandar pedido ao n8n
 
-app = Flask(__name__)
-CORS(app)  # CORS foi reativado
+app = Flask(__name__, static_folder='../frontend/build')
 
-# Pasta para salvar os pedidos
+# Configurar CORS
+CORS(app, origins=["*"])  # Em produção, especifique o domínio
+
+# Diretório para salvar pedidos
 ORDERS_DIR = 'orders'
 if not os.path.exists(ORDERS_DIR):
     os.makedirs(ORDERS_DIR)
 
-# URL do Webhook n8n
-N8N_WEBHOOK_URL = "https://alexandro-granja.up.railway.app/webhook/order-status-update"
+@app.route('/health')
+def health_check():
+    return jsonify({
+        "status": "healthy",
+        "message": "🍔 Burger House API funcionando!",
+        "timestamp": datetime.now().isoformat()
+    })
 
-# --- Rotas principais ---
 @app.route('/')
 def home():
-    return jsonify({"message": "API Burger House funcionando!"})
+    return jsonify({
+        "message": "🍔 Bem-vindo ao Burger House API",
+        "endpoints": {
+            "/health": "Health check",
+            "/api/burgers": "Lista de hambúrgueres",
+            "/api/orders": "Criar pedido (POST)"
+        }
+    })
 
-# 🔹 Rota para abrir o painel admin
-@app.route('/admin')
-def admin_page():
-    return render_template("adm-pagina.html")
+@app.route('/api/burgers')
+def get_burgers():
+    burgers = [
+        {
+            "id": 1,
+            "name": "Big Burger",
+            "price": 25.99,
+            "description": "Hambúrguer artesanal com carne 200g, queijo cheddar, alface, tomate e molho especial",
+            "image": "/images/big-burger.jpg"
+        },
+        {
+            "id": 2,
+            "name": "Cheese Burger",
+            "price": 19.99,
+            "description": "Hambúrguer clássico com carne 150g e queijo derretido",
+            "image": "/images/cheese-burger.jpg"
+        },
+        {
+            "id": 3,
+            "name": "Chicken Burger",
+            "price": 22.99,
+            "description": "Hambúrguer de frango grelhado com maionese temperada",
+            "image": "/images/chicken-burger.jpg"
+        },
+        {
+            "id": 4,
+            "name": "Veggie Burger",
+            "price": 18.99,
+            "description": "Hambúrguer vegetariano com blend de grãos e legumes",
+            "image": "/images/veggie-burger.jpg"
+        }
+    ]
+    return jsonify(burgers)
 
-
-# --- Criar pedido ---
 @app.route('/api/orders', methods=['POST'])
 def create_order():
     try:
-        order_data = request.json
-        order_id = f"order_{int(time.time())}"
-        order_data['id'] = order_id
-        order_data['created_at'] = datetime.now().isoformat()
-        order_data['status'] = 'pending'
+        order_data = request.get_json()
         
+        if not order_data:
+            return jsonify({"error": "Dados do pedido não fornecidos"}), 400
+        
+        # Gerar ID único para o pedido
+        order_id = f"order_{int(datetime.now().timestamp())}"
+        
+        # Adicionar informações do pedido
+        order = {
+            "id": order_id,
+            "timestamp": datetime.now().isoformat(),
+            "items": order_data.get('items', []),
+            "customer": order_data.get('customer', {}),
+            "total": order_data.get('total', 0),
+            "status": "received"
+        }
+        
+        # Salvar pedido em arquivo JSON
         order_file = os.path.join(ORDERS_DIR, f"{order_id}.json")
-        with open(order_file, 'w', encoding='utf-8') as f:
-            json.dump(order_data, f, ensure_ascii=False, indent=2)
+        with open(order_file, 'w') as f:
+            json.dump(order, f, indent=2)
         
-        # --- NOTIFICAÇÃO NO TERMINAL ---
-        print("\n--- ✅ NOVO PEDIDO RECEBIDO ---")
-        print(json.dumps(order_data, indent=2, ensure_ascii=False))
-        print("--------------------------------\n")
-
-        # --- 🚀 ENVIA PEDIDO PARA N8N ---
-        try:
-            requests.post(N8N_WEBHOOK_URL, json=order_data, timeout=5)
-            print("✅ Pedido enviado para n8n com sucesso!")
-        except Exception as e:
-            print(f"⚠️ Erro ao enviar pedido para n8n: {e}")
-
         return jsonify({
-            "status": "success", 
             "message": "Pedido criado com sucesso!",
-            "order_id": order_id
-        })
+            "order_id": order_id,
+            "estimated_time": "30-45 minutos"
+        }), 201
         
     except Exception as e:
-        return jsonify({
-            "status": "error", 
-            "message": f"Erro ao criar pedido: {str(e)}"
-        }), 500
+        return jsonify({"error": str(e)}), 500
 
-
-# --- Listar pedidos ---
-@app.route('/api/orders', methods=['GET'])
-def get_orders():
+@app.route('/api/orders/<order_id>')
+def get_order(order_id):
     try:
-        orders = []
-        for filename in sorted(os.listdir(ORDERS_DIR), reverse=True):
-            if filename.endswith('.json'):
-                with open(os.path.join(ORDERS_DIR, filename), 'r', encoding='utf-8') as f:
-                    orders.append(json.load(f))
-        return jsonify(orders)
-    except Exception as e:
-        return jsonify({"status": "error", "message": f"Erro ao buscar pedidos: {str(e)}"}), 500
-
-
-# --- Atualizar pedido ---
-@app.route('/api/orders/<order_id>', methods=['PUT'])
-def update_order_status(order_id):
-    try:
-        data = request.json
-        new_status = data.get('status')
         order_file = os.path.join(ORDERS_DIR, f"{order_id}.json")
-        if not os.path.exists(order_file):
-            return jsonify({"status": "error", "message": "Pedido não encontrado"}), 404
-        with open(order_file, 'r', encoding='utf-8') as f:
-            order_data = json.load(f)
-        order_data['status'] = new_status
-        order_data['updated_at'] = datetime.now().isoformat()
-        with open(order_file, 'w', encoding='utf-8') as f:
-            json.dump(order_data, f, ensure_ascii=False, indent=2)
-        return jsonify({"status": "success", "message": "Status atualizado"})
+        if os.path.exists(order_file):
+            with open(order_file, 'r') as f:
+                order = json.load(f)
+            return jsonify(order)
+        else:
+            return jsonify({"error": "Pedido não encontrado"}), 404
     except Exception as e:
-        return jsonify({"status": "error", "message": f"Erro ao atualizar pedido: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
+# Servir arquivos estáticos do React (fallback)
+@app.route('/<path:path>')
+def serve_react_app(path):
+    if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
+        return send_from_directory(app.static_folder, path)
+    else:
+        return send_from_directory(app.static_folder, 'index.html')
 
-# --- Gerar mensagem formatada ---
-def format_order_message(order_data):
-    customer = order_data['customer']
-    items = order_data['items']
-    total = order_data['total']
-    message = f"""🍔 *NOVO PEDIDO - BURGER HOUSE*
-👤 *Cliente:* {customer['name']} | 📱 *Telefone:* {customer['phone']}
-📍 *Endereço:* {customer['address']}, {customer['neighborhood']}"""
-    if customer['complement']:
-        message += f", {customer['complement']}"
-    message += "\n\n🛒 *Itens do Pedido:*"
-    for item in items:
-        message += f"\n• {item['quantity']}x {item['name']} - R$ {(item['price'] * item['quantity']):.2f}"
-    message += f"\n\n💰 *Total: R$ {total:.2f}* | 💳 *Pagamento:* {customer['paymentMethod'].title()}"""
-    return message
-
-
-# --- Inicialização ---
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  
-    app.run(host='0.0.0.0', port=port, debug=False)
+    port = int(os.environ.get('PORT', 5000))
+    host = '0.0.0.0'
+    
+    print(f"🚀 Iniciando Burger House API em {host}:{port}")
+    print(f"📁 Diretório de pedidos: {ORDERS_DIR}")
+    
+    app.run(
+        host=host,
+        port=port,
+        debug=False,  # Nunca use debug=True em produção
+        threaded=True
+    )

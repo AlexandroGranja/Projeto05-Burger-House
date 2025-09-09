@@ -2,9 +2,11 @@
 FROM node:18-alpine as frontend-build
 WORKDIR /app/frontend
 
-# Copiar package.json e package-lock.json do frontend
+# Copiar package.json do frontend
 COPY frontend/package*.json ./
-RUN npm ci --only=production
+
+# Instalar dependências
+RUN npm install
 
 # Copiar código fonte do frontend
 COPY frontend/ ./
@@ -12,47 +14,43 @@ COPY frontend/ ./
 # Build da aplicação React
 RUN npm run build
 
-# Stage 2: Setup Backend Dependencies
-FROM python:3.9-slim as backend-setup
-WORKDIR /app/backend
-
-# Copiar requirements.txt do backend
-COPY backend/requirements.txt ./
-
-# Instalar dependências Python
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copiar código fonte do backend
-COPY backend/ ./
-
-# Stage 3: Production Image
+# Stage 2: Production Image
 FROM python:3.9-slim
 
-# Instalar Node.js para servir o frontend
+# Instalar Node.js
 RUN apt-get update && \
-    apt-get install -y nodejs npm && \
+    apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
     npm install -g serve && \
-    rm -rf /var/lib/apt/lists/* && \
-    apt-get clean
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copiar dependências Python do stage anterior
-COPY --from=backend-setup /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
-COPY --from=backend-setup /usr/local/bin /usr/local/bin
+# Copiar e instalar dependências Python
+COPY backend/requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código do backend
-COPY --from=backend-setup /app/backend ./backend
+COPY backend/ ./backend/
 
 # Copiar build do frontend
-COPY --from=frontend-build /app/frontend/build ./frontend/build
+COPY --from=frontend-build /app/frontend/build ./frontend/build/
 
-# Criar script de inicialização
-COPY start.sh ./start.sh
-RUN chmod +x ./start.sh
+# Criar script simplificado de inicialização
+RUN echo '#!/bin/bash\n\
+echo "Iniciando Burger House..."\n\
+python backend/app.py &\n\
+BACKEND_PID=$!\n\
+echo "Backend iniciado (PID: $BACKEND_PID)"\n\
+sleep 5\n\
+serve -s frontend/build -l ${PORT:-3000} &\n\
+FRONTEND_PID=$!\n\
+echo "Frontend servindo na porta ${PORT:-3000} (PID: $FRONTEND_PID)"\n\
+wait' > start.sh && chmod +x start.sh
 
-# Expor portas (ajuste conforme necessário)
-EXPOSE 3000 5000
+# Usar a porta do Railway
+EXPOSE ${PORT:-3000}
 
 # Comando de inicialização
 CMD ["./start.sh"]
