@@ -1259,7 +1259,9 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Configuration
-        const API_BASE_URL = 'http://localhost:5000'; // Altere para a URL do seu backend
+        const API_BASE_URL = window.location.origin.includes('railway')
+            ? window.location.origin.replace('3000', '5000')
+            : 'http://localhost:5000';
         const N8N_WEBHOOK_URL = 'https://alexandro-granja.up.railway.app/webhook/order-status-update'; // URL do webhook n8n
         const N8N_STATUS_WEBHOOK_URL = "https://alexandro-granja.up.railway.app/webhook/order-status-update";
         // Application State
