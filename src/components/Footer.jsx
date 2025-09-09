@@ -101,6 +101,7 @@ const Footer = () => {
             </span>
           </p>
         </div>
+      </div>
     </footer>
   );
 };
