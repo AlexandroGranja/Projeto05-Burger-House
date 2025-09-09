@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 app = Flask(__name__, static_folder='static', static_url_path='/')
 
 # Configure CORS
-CORS(app)
+CORS(app, origins=["https://burger-house.up.railway.app", "http://localhost:3000"])
 
 # Create orders directory if it doesn't exist
 ORDERS_DIR = 'orders'
