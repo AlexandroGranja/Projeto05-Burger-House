@@ -5,17 +5,14 @@ WORKDIR /app/frontend
 # Copy package files
 COPY frontend/package*.json ./
 
-# Install dependencies with verbose logging
+# Install dependencies
 RUN npm install --verbose
 
 # Copy frontend source
 COPY frontend/ ./
 
-# Build with verbose output
+# Build React app
 RUN npm run build --verbose
-
-# List build output for debugging
-RUN ls -la build/
 
 # Production stage
 FROM python:3.9-slim
@@ -23,25 +20,30 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends curl && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy and install Python dependencies
-COPY backend/requirements.txt ./requirements.txt
+# Copy and install Python dependencies first
+COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
-COPY backend/ ./
+COPY backend/ .
 
-# Copy built frontend
-COPY --from=build-frontend /app/frontend/build ./static
+# Copy built frontend from build stage
+COPY --from=build-frontend /app/frontend/build ../frontend/build
 
-# Verify static files were copied
-RUN ls -la static/ || echo "No static files found!"
+# Configure Flask to serve React static files
+ENV FLASK_APP=app.py
+ENV FLASK_ENV=production
+ENV PORT=${PORT:-8080}
 
-# Use PORT from Railway environment
-ENV PORT=${PORT:-8000}
 EXPOSE $PORT
 
-# Start Python directly (more reliable than shell script)
-CMD ["python", "app.py"]
+# Health check (simplificado)
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:${PORT}/ || exit 1
+
+# Start Python application with correct port
+CMD exec gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 8 --timeout 0 app:app

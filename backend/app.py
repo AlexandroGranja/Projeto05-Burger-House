@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 # Se app.py está em 'backend/' e 'build' está em 'frontend/build',
 # então o caminho relativo é '../frontend/build'.
 # A linha abaixo foi ajustada para refletir o caminho correto para a pasta de build do frontend.
-app = Flask(__name__, static_folder='../frontend/build', static_url_path='/')
+app = Flask(__name__, static_folder='static', static_url_path='/')
 
 # Configure CORS
 CORS(app)
