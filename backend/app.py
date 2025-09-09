@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 # Create Flask app with static folder pointing to React build
 app = Flask(__name__, static_folder='static', static_url_path='/')
 
-# Configure CORS
-CORS(app, origins=["https://burger-house.up.railway.app", "http://localhost:3000"])
+# Configure CORS - CORRIGIDO para permitir todas as origens
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Create orders directory if it doesn't exist
 ORDERS_DIR = 'orders'
@@ -42,6 +42,15 @@ with app.app_context():
             logger.warning("⚠️ index.html not found in static folder")
     else:
         logger.error(f"❌ Static folder not found: {app.static_folder}")
+
+# Rota para página admin - NOVA ROTA ADICIONADA
+@app.route('/adm-pagina.html')
+def serve_admin():
+    try:
+        return send_from_directory('templates', 'adm-pagina.html')
+    except Exception as e:
+        logger.error(f"Error serving admin page: {str(e)}")
+        return jsonify({"error": "Admin page not found"}), 404
 
 # API Routes
 @app.route('/api/health')
