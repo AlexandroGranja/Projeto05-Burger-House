@@ -1,5 +1,5 @@
 # Imports restaurados, MENOS o pywhatkit
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 import json
 import os
@@ -18,10 +18,18 @@ if not os.path.exists(ORDERS_DIR):
 # URL do Webhook n8n
 N8N_WEBHOOK_URL = "https://alexandro-granja.up.railway.app/webhook/order-status-update"
 
+# --- Rotas principais ---
 @app.route('/')
 def home():
     return jsonify({"message": "API Burger House funcionando!"})
 
+# 🔹 Rota para abrir o painel admin
+@app.route('/admin')
+def admin_page():
+    return render_template("adm-pagina.html")
+
+
+# --- Criar pedido ---
 @app.route('/api/orders', methods=['POST'])
 def create_order():
     try:
@@ -59,6 +67,8 @@ def create_order():
             "message": f"Erro ao criar pedido: {str(e)}"
         }), 500
 
+
+# --- Listar pedidos ---
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
     try:
@@ -71,6 +81,8 @@ def get_orders():
     except Exception as e:
         return jsonify({"status": "error", "message": f"Erro ao buscar pedidos: {str(e)}"}), 500
 
+
+# --- Atualizar pedido ---
 @app.route('/api/orders/<order_id>', methods=['PUT'])
 def update_order_status(order_id):
     try:
@@ -89,6 +101,8 @@ def update_order_status(order_id):
     except Exception as e:
         return jsonify({"status": "error", "message": f"Erro ao atualizar pedido: {str(e)}"}), 500
 
+
+# --- Gerar mensagem formatada ---
 def format_order_message(order_data):
     customer = order_data['customer']
     items = order_data['items']
@@ -104,6 +118,8 @@ def format_order_message(order_data):
     message += f"\n\n💰 *Total: R$ {total:.2f}* | 💳 *Pagamento:* {customer['paymentMethod'].title()}"""
     return message
 
+
+# --- Inicialização ---
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))  
-    app.run(host='0.0.0.0', port=port, debug=False)  
+    app.run(host='0.0.0.0', port=port, debug=False)
