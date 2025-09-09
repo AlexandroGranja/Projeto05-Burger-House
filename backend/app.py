@@ -10,7 +10,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Create Flask app with static folder pointing to React build
-app = Flask(__name__, static_folder='static', static_url_path='')
+# O caminho para o static_folder deve ser relativo ao diretório onde o app.py está.
+# Se app.py está em 'backend/' e 'build' está em 'frontend/build',
+# então o caminho relativo é '../frontend/build'.
+# A linha abaixo foi ajustada para refletir o caminho correto para a pasta de build do frontend.
+app = Flask(__name__, static_folder='../frontend/build', static_url_path='/')
 
 # Configure CORS
 CORS(app)
@@ -23,7 +27,7 @@ os.makedirs(ORDERS_DIR, exist_ok=True)
 @app.before_first_request
 def startup_check():
     logger.info("🍔 Burger House API starting...")
-    logger.info(f"📁 Static folder: {app.static_folder}")
+    logger.info(f"📦 Static folder: {app.static_folder}")
     logger.info(f"📂 Working directory: {os.getcwd()}")
     
     # List contents of current directory
@@ -130,8 +134,11 @@ def create_order():
 @app.route('/<path:path>')
 def serve_react_app(path):
     # If it's an API route that doesn't exist, return 404
-    if path.startswith('api/'):
-        return jsonify({"error": "API endpoint not found"}), 404
+    if path.startswith('api/') or path.startswith('images/') or path.startswith('static/'):
+        # Tenta servir o arquivo estático se for uma rota de imagem ou estática
+        if os.path.exists(os.path.join(app.static_folder, path)):
+            return send_from_directory(app.static_folder, path)
+        return jsonify({"error": "API endpoint or static file not found"}), 404
     
     # Try to serve static file first
     if path != "" and os.path.exists(os.path.join(app.static_folder, path)):
