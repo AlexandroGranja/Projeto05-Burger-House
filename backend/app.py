@@ -154,6 +154,39 @@ def create_order():
     except Exception as e:
         logger.error(f"Error creating order: {str(e)}")
         return jsonify({"error": "Failed to create order"}), 500
+    
+    @app.route('/api/orders/<order_id>', methods=['PUT'])
+def update_order_status(order_id):
+    try:
+        data = request.get_json()
+        new_status = data.get('status')
+        
+        if not new_status:
+            return jsonify({"error": "Status não fornecido"}), 400
+        
+        # Encontre o arquivo do pedido
+        order_file = os.path.join(ORDERS_DIR, f"{order_id}.json")
+        
+        if not os.path.exists(order_file):
+            return jsonify({"error": "Pedido não encontrado"}), 404
+        
+        # Atualize o status
+        with open(order_file, 'r') as f:
+            order = json.load(f)
+        
+        order['status'] = new_status
+        
+        with open(order_file, 'w') as f:
+            json.dump(order, f, indent=2)
+        
+        logger.info(f"📝 Order {order_id} status updated to: {new_status}")
+        
+        return jsonify({"success": True, "message": "Status atualizado"})
+        
+    except Exception as e:
+        logger.error(f"Error updating order status: {str(e)}")
+        return jsonify({"error": "Failed to update order status"}), 500
+    
 
 # Serve React App (catch all routes)
 @app.route('/', defaults={'path': ''})
