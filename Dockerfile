@@ -30,6 +30,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
 COPY backend/ .
+COPY backend/templates/ templates/
 
 # ✅✅✅ CORREÇÃO AQUI: Mude para ./static ✅✅✅
 COPY --from=build-frontend /app/frontend/build ./static
