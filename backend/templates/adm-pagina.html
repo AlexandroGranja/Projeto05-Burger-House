@@ -1816,7 +1816,27 @@
         }
 
         function formatDate(dateString) {
-            const date = new Date(dateString);
+            // Verifica se o parâmetro é válido
+            if (!dateString || dateString === "Invalid Date" || dateString === "null") {
+                return "Data não disponível";
+            }
+
+            // Tenta criar um objeto Date
+            let date = new Date(dateString);
+
+            // Verifica se a data é válida
+            if (isNaN(date.getTime())) {
+                // Tenta parsing alternativo para formatos problemáticos
+                // Substitui hífens por barras (problema comum com datas)
+                const altDate = new Date(dateString.replace(/-/g, '/'));
+
+                if (!isNaN(altDate.getTime())) {
+                    date = altDate;
+                } else {
+                    return "Data não disponível";
+                }
+            }
+
             const now = new Date();
             const diffInHours = (now - date) / (1000 * 60 * 60);
 
