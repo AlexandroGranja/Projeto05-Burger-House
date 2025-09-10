@@ -1838,7 +1838,7 @@
             orderCard.onclick = () => showOrderDetails(order);
 
             // ✅ CORREÇÃO: Garantir que a data seja válida antes de exibir
-            const orderDate = order.created_at ? formatDate(order.created_at) : "Data não disponível";
+            const orderDate = order.created_at ? formatDate(order.timestamp) : "Data não disponível";
 
             orderCard.innerHTML = `
         <div class="order-card-body">
