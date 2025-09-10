@@ -1424,9 +1424,26 @@
                 const data = await response.json();
                 console.log('📦 Dados recebidos:', data);
 
-                // ✅ CORREÇÃO DEFINITIVA:
-                orders = Array.isArray(data.orders) ? data.orders : [];
+                // ✅ CORREÇÃO DEFINITIVA - Versão melhorada:
+                if (Array.isArray(data)) {
+                    orders = data;
+                } else if (Array.isArray(data.orders)) {
+                    orders = data.orders;
+                } else if (data.data && Array.isArray(data.data.orders)) {
+                    orders = data.data.orders;
+                } else {
+                    orders = [];
+                    console.error('❌ Estrutura de dados inesperada:', data);
+                }
+
                 console.log('✅ Pedidos carregados:', orders.length);
+
+                // Debug: verifique o primeiro pedido (se existir)
+                if (orders.length > 0) {
+                    console.log('📋 Exemplo de pedido:', orders[0]);
+                    console.log('📅 Data do primeiro pedido:', orders[0].created_at);
+                    console.log('🔍 Tipo da data:', typeof orders[0].created_at);
+                }
 
                 renderOrders();
                 updateStats();
