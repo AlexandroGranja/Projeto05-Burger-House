@@ -155,7 +155,7 @@ def create_order():
         logger.error(f"Error creating order: {str(e)}")
         return jsonify({"error": "Failed to create order"}), 500
     
-    @app.route('/api/orders/<order_id>', methods=['PUT'])
+@app.route('/api/orders/<order_id>', methods=['PUT'])
 def update_order_status(order_id):
     try:
         data = request.get_json()
@@ -185,8 +185,7 @@ def update_order_status(order_id):
         
     except Exception as e:
         logger.error(f"Error updating order status: {str(e)}")
-        return jsonify({"error": "Failed to update order status"}), 500
-    
+        return jsonify({"error": "Failed to update order status"}), 500    
 
 # Serve React App (catch all routes)
 @app.route('/', defaults={'path': ''})
