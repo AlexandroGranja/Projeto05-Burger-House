@@ -58,7 +58,7 @@ function App() {
       setCart(cart.filter(cartItem => cartItem.id !== itemId));
     }
   };
-  
+
   const handleAddItemClick = (item) => {
     if (item.variants) {
       setSelectedItemWithOptions(item);
@@ -68,22 +68,28 @@ function App() {
   };
 
   const getTotalPrice = () => cart.reduce((total, item) => total + (item.price * item.quantity), 0);
-  
+
   const handleCheckout = () => {
     if (cart.length === 0) return;
     setShowCart(false);
     setShowCheckout(true);
   };
-  
+
   const handleOrderSubmit = async () => {
     if (!customerData.name || !customerData.phone || !customerData.address || !customerData.neighborhood) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
+
     const orderDetails = {
       items: cart,
       total: getTotalPrice(),
       customer: customerData,
+      // ✅ ADICIONE ESTAS LINHAS AQUI
+      data_criacao: new Date().toISOString(),
+      horario_pedido: new Date().toLocaleString('pt-BR', {
+        timeZone: 'America/Sao_Paulo'
+      })
     };
     try {
       const response = await fetch('/api/orders', {
@@ -109,17 +115,17 @@ function App() {
     <div className="min-h-screen bg-gray-50 font-sans">
       <Header />
       <Hero />
-      <MenuSection 
-        menuItems={menuItems} 
-        sides={sides} 
-        handleAddItemClick={handleAddItemClick} 
+      <MenuSection
+        menuItems={menuItems}
+        sides={sides}
+        handleAddItemClick={handleAddItemClick}
       />
       <Footer />
 
       <CartButton cart={cart} setShowCart={setShowCart} />
-      
-      <OptionsModal 
-        item={selectedItemWithOptions} 
+
+      <OptionsModal
+        item={selectedItemWithOptions}
         addToCart={addToCart}
         closeModal={() => setSelectedItemWithOptions(null)}
       />
@@ -133,7 +139,7 @@ function App() {
         getTotalPrice={getTotalPrice}
         handleCheckout={handleCheckout}
       />
-      
+
       <CheckoutModal
         show={showCheckout}
         closeCheckout={() => setShowCheckout(false)}
