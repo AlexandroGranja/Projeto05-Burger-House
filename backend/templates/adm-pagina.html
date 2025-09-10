@@ -1815,42 +1815,46 @@
             return statusMap[status] || status;
         }
 
-        function formatDate(dateString) {
-            // Verifica se o parâmetro é válido
-            if (!dateString || dateString === "Invalid Date" || dateString === "null") {
-                return "Data não disponível";
-            }
+        function createOrderCard(order) {
+            const orderCard = document.createElement('div');
+            orderCard.className = `order-card ${order.status}`;
+            orderCard.onclick = () => showOrderDetails(order);
 
-            // Tenta criar um objeto Date
-            let date = new Date(dateString);
+            // ✅ CORREÇÃO: Garantir que a data seja válida antes de exibir
+            const orderDate = order.created_at ? formatDate(order.created_at) : "Data não disponível";
 
-            // Verifica se a data é válida
-            if (isNaN(date.getTime())) {
-                // Tenta parsing alternativo para formatos problemáticos
-                // Substitui hífens por barras (problema comum com datas)
-                const altDate = new Date(dateString.replace(/-/g, '/'));
+            orderCard.innerHTML = `
+        <div class="order-card-body">
+            <div class="order-header">
+                <div class="flex-grow-1">
+                    <div class="order-id">Pedido #${order.id.substr(-6)}</div>
+                    <div class="order-time">${orderDate}</div>
+                </div>
+                <span class="status-badge status-${order.status}">
+                    ${getStatusText(order.status)}
+                </span>
+            </div>
+            
+            <div class="customer-info">
+                <div class="customer-name">
+                    <i class="fas fa-user me-2 text-muted"></i>${order.customer.name}
+                </div>
+                <div class="customer-phone">
+                    <i class="fas fa-phone me-2 text-muted"></i>${order.customer.phone}
+                </div>
+            </div>
+            
+            <div class="order-summary">
+                <span class="items-count">
+                    <i class="fas fa-shopping-bag me-1 text-muted"></i>
+                    ${order.items.length} ${order.items.length === 1 ? 'item' : 'itens'}
+                </span>
+                <span class="order-total">R$ ${order.total.toFixed(2)}</span>
+            </div>
+        </div>
+    `;
 
-                if (!isNaN(altDate.getTime())) {
-                    date = altDate;
-                } else {
-                    return "Data não disponível";
-                }
-            }
-
-            const now = new Date();
-            const diffInHours = (now - date) / (1000 * 60 * 60);
-
-            if (diffInHours < 1) {
-                const diffInMinutes = Math.floor((now - date) / (1000 * 60));
-                return `${diffInMinutes} min atrás`;
-            } else if (diffInHours < 24) {
-                return `${Math.floor(diffInHours)}h atrás`;
-            } else {
-                return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
+            return orderCard;
         }
 
         function updateLastUpdateTime() {
