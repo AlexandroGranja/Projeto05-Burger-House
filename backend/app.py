@@ -239,7 +239,7 @@ if __name__ == '__main__':
         debug=False
     )
 
-    def gerar_id_pedido():
+def gerar_id_pedido():
     """Gerar ID único para o pedido"""
     timestamp = int(datetime.now().timestamp())
     return f"{timestamp}"
