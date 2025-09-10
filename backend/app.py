@@ -124,7 +124,7 @@ def get_orders():
                         continue
         
         logger.info(f"✅ Returning {len(orders)} orders")
-        return jsonify(orders)  # ✅ CORREÇÃO: Retornar array direto, não objeto com chave "orders"
+        return jsonify({"orders": orders})  # ✅ CORREÇÃO: Retornar objeto com chave "orders"
         
     except Exception as e:
         logger.error(f"❌ Error getting orders: {str(e)}")
