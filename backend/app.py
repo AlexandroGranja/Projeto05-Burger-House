@@ -5,6 +5,7 @@ import json
 import pytz
 from datetime import datetime
 import logging
+import uuid
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -102,7 +103,7 @@ def get_burgers():
     ]
     return jsonify({"burgers": burgers})
 
-# ✅✅✅ NOVA ROTA ADICIONADA: GET /api/orders ✅✅✅
+# ✅✅✅ ROTA GET /api/orders - PARA LISTAR PEDIDOS ✅✅✅
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
     try:
@@ -114,48 +115,72 @@ def get_orders():
             
             for filename in order_files:
                 if filename.endswith('.json'):
-                    with open(os.path.join(ORDERS_DIR, filename), 'r') as f:
-                        order_data = json.load(f)
-                        orders.append(order_data)
+                    try:
+                        with open(os.path.join(ORDERS_DIR, filename), 'r', encoding='utf-8') as f:
+                            order_data = json.load(f)
+                            orders.append(order_data)
+                    except Exception as e:
+                        logger.error(f"❌ Error reading order file {filename}: {str(e)}")
+                        continue
         
         logger.info(f"✅ Returning {len(orders)} orders")
-        return jsonify({"orders": orders})
+        return jsonify(orders)  # ✅ CORREÇÃO: Retornar array direto, não objeto com chave "orders"
+        
     except Exception as e:
         logger.error(f"❌ Error getting orders: {str(e)}")
         return jsonify({"error": "Failed to get orders"}), 500
 
-@app.route('/api/pedidos', methods=['POST'])
-def criar_pedido():
+# ✅✅✅ NOVA ROTA: POST /api/orders - PARA CRIAR PEDIDOS ✅✅✅
+@app.route('/api/orders', methods=['POST'])
+def create_order():
     try:
         data = request.get_json()
+        logger.info(f"📦 Received order data: {json.dumps(data, ensure_ascii=False)}")
         
-        # Gerar timestamp correto com timezone do Brasil
+        if not data:
+            return jsonify({"error": "No data provided"}), 400
+        
+        # Gerar ID único para o pedido
+        order_id = str(uuid.uuid4())[:8]
+        
+        # Criar timestamp com timezone do Brasil
         agora = datetime.now(BRAZIL_TZ)
         
-        pedido = {
-            'id': gerar_id_pedido(),
-            'cliente': data.get('cliente'),
-            'telefone': data.get('telefone'),
-            'itens': data.get('itens'),
-            'total': data.get('total'),
-            'status': 'CONFIRMED',
-            'data_pedido': agora.isoformat(),
-            'data_formatada': agora.strftime('%d/%m/%Y %H:%M:%S'),
-            'timestamp': agora.timestamp()
+        # Construir objeto do pedido
+        order = {
+            'id': order_id,
+            'created_at': agora.isoformat(),
+            'status': 'pending',
+            'customer': {
+                'name': data.get('cliente', data.get('customer', {}).get('name', 'Cliente não informado')),
+                'phone': data.get('telefone', data.get('customer', {}).get('phone', 'Telefone não informado')),
+                'address': data.get('endereco', data.get('customer', {}).get('address', 'Endereço não informado')),
+                'neighborhood': data.get('bairro', data.get('customer', {}).get('neighborhood', 'Bairro não informado')),
+                'complement': data.get('complemento', data.get('customer', {}).get('complement', '')),
+                'paymentMethod': data.get('forma_pagamento', data.get('customer', {}).get('paymentMethod', 'PIX'))
+            },
+            'items': data.get('itens', data.get('items', [])),
+            'total': float(data.get('total', 0))
         }
         
-        salvar_pedido(pedido)
+        # Salvar pedido em arquivo JSON
+        order_filename = os.path.join(ORDERS_DIR, f"{order_id}.json")
+        with open(order_filename, 'w', encoding='utf-8') as f:
+            json.dump(order, f, ensure_ascii=False, indent=2)
         
-        return jsonify({'success': True, 'pedido_id': pedido['id']})
-    
-    except Exception as e:
-        print(f"Erro ao criar pedido: {e}")
-        return jsonify({'error': str(e)}), 500
+        logger.info(f"✅ Order created successfully: {order_id}")
+        
+        return jsonify({
+            "success": True, 
+            "order_id": order_id,
+            "message": "Pedido criado com sucesso!"
+        })
         
     except Exception as e:
-        logger.error(f"Error creating order: {str(e)}")
-        return jsonify({"error": "Failed to create order"}), 500
-    
+        logger.error(f"❌ Error creating order: {str(e)}")
+        return jsonify({"error": f"Failed to create order: {str(e)}"}), 500
+
+# ✅✅✅ ROTA PUT /api/orders/<order_id> - PARA ATUALIZAR STATUS ✅✅✅
 @app.route('/api/orders/<order_id>', methods=['PUT'])
 def update_order_status(order_id):
     try:
@@ -165,28 +190,77 @@ def update_order_status(order_id):
         if not new_status:
             return jsonify({"error": "Status não fornecido"}), 400
         
-        # Encontre o arquivo do pedido
+        # Encontrar o arquivo do pedido
         order_file = os.path.join(ORDERS_DIR, f"{order_id}.json")
         
         if not os.path.exists(order_file):
             return jsonify({"error": "Pedido não encontrado"}), 404
         
-        # Atualize o status
-        with open(order_file, 'r') as f:
+        # Atualizar o status
+        with open(order_file, 'r', encoding='utf-8') as f:
             order = json.load(f)
         
         order['status'] = new_status
         
-        with open(order_file, 'w') as f:
-            json.dump(order, f, indent=2)
+        with open(order_file, 'w', encoding='utf-8') as f:
+            json.dump(order, f, ensure_ascii=False, indent=2)
         
         logger.info(f"📝 Order {order_id} status updated to: {new_status}")
         
         return jsonify({"success": True, "message": "Status atualizado"})
         
     except Exception as e:
-        logger.error(f"Error updating order status: {str(e)}")
-        return jsonify({"error": "Failed to update order status"}), 500    
+        logger.error(f"❌ Error updating order status: {str(e)}")
+        return jsonify({"error": "Failed to update order status"}), 500
+
+# ✅✅✅ ROTA GET /api/pedidos - COMPATIBILIDADE (para o frontend atual) ✅✅✅
+@app.route('/api/pedidos', methods=['GET'])
+def listar_pedidos():
+    try:
+        orders = []
+        if os.path.exists(ORDERS_DIR):
+            for filename in os.listdir(ORDERS_DIR):
+                if filename.endswith('.json'):
+                    try:
+                        with open(os.path.join(ORDERS_DIR, filename), 'r', encoding='utf-8') as f:
+                            order_data = json.load(f)
+                            
+                            # Converter para formato antigo (compatibilidade)
+                            pedido = {
+                                'id': order_data['id'],
+                                'cliente': order_data['customer']['name'],
+                                'telefone': order_data['customer']['phone'],
+                                'itens': order_data['items'],
+                                'total': order_data['total'],
+                                'status': order_data['status'],
+                                'data_pedido': order_data['created_at'],
+                                'data_formatada': datetime.fromisoformat(order_data['created_at'].replace('Z', '+00:00')).astimezone(BRAZIL_TZ).strftime('%d/%m/%Y %H:%M:%S'),
+                                'timestamp': datetime.fromisoformat(order_data['created_at'].replace('Z', '+00:00')).timestamp()
+                            }
+                            orders.append(pedido)
+                    except Exception as e:
+                        logger.error(f"❌ Error reading order file {filename}: {str(e)}")
+                        continue
+        
+        # Ordenar por timestamp (mais recente primeiro)
+        orders.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+        
+        return jsonify(orders)
+    
+    except Exception as e:
+        logger.error(f"❌ Error listing orders: {str(e)}")
+        return jsonify([])
+
+# ✅✅✅ ROTA POST /api/pedidos - COMPATIBILIDADE (para o frontend atual) ✅✅✅
+@app.route('/api/pedidos', methods=['POST'])
+def criar_pedido():
+    try:
+        # Redirecionar para a nova rota POST /api/orders
+        return create_order()
+    
+    except Exception as e:
+        logger.error(f"❌ Error creating order: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 # Serve React App (catch all routes)
 @app.route('/', defaults={'path': ''})
@@ -238,52 +312,3 @@ if __name__ == '__main__':
         port=port,
         debug=False
     )
-
-def gerar_id_pedido():
-    """Gerar ID único para o pedido"""
-    timestamp = int(datetime.now().timestamp())
-    return f"{timestamp}"
-
-def salvar_pedido(pedido):
-    """Salvar pedido no arquivo JSON"""
-    pedidos_file = 'pedidos.json'
-    
-    if os.path.exists(pedidos_file):
-        with open(pedidos_file, 'r', encoding='utf-8') as f:
-            pedidos = json.load(f)
-    else:
-        pedidos = []
-    
-    pedidos.append(pedido)
-    
-    with open(pedidos_file, 'w', encoding='utf-8') as f:
-        json.dump(pedidos, f, ensure_ascii=False, indent=2)
-
-@app.route('/api/pedidos', methods=['GET'])
-def listar_pedidos():
-    try:
-        pedidos_file = 'pedidos.json'
-        
-        if not os.path.exists(pedidos_file):
-            return jsonify([])
-        
-        with open(pedidos_file, 'r', encoding='utf-8') as f:
-            pedidos = json.load(f)
-        
-        # Processar pedidos para garantir que tenham data
-        for pedido in pedidos:
-            if 'data_formatada' not in pedido:
-                try:
-                    dt = datetime.fromisoformat(pedido['data_pedido'].replace('Z', '+00:00'))
-                    dt_brasil = dt.astimezone(BRAZIL_TZ)
-                    pedido['data_formatada'] = dt_brasil.strftime('%d/%m/%Y %H:%M:%S')
-                except:
-                    pedido['data_formatada'] = 'Data não disponível'
-        
-        pedidos.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
-        
-        return jsonify(pedidos)
-    
-    except Exception as e:
-        print(f"Erro ao listar pedidos: {e}")
-        return jsonify([])
