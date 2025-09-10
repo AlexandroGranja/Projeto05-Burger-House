@@ -99,6 +99,28 @@ def get_burgers():
     ]
     return jsonify({"burgers": burgers})
 
+# ✅✅✅ NOVA ROTA ADICIONADA: GET /api/orders ✅✅✅
+@app.route('/api/orders', methods=['GET'])
+def get_orders():
+    try:
+        logger.info("📋 Loading orders...")
+        orders = []
+        if os.path.exists(ORDERS_DIR):
+            order_files = os.listdir(ORDERS_DIR)
+            logger.info(f"📁 Found {len(order_files)} order files")
+            
+            for filename in order_files:
+                if filename.endswith('.json'):
+                    with open(os.path.join(ORDERS_DIR, filename), 'r') as f:
+                        order_data = json.load(f)
+                        orders.append(order_data)
+        
+        logger.info(f"✅ Returning {len(orders)} orders")
+        return jsonify({"orders": orders})
+    except Exception as e:
+        logger.error(f"❌ Error getting orders: {str(e)}")
+        return jsonify({"error": "Failed to get orders"}), 500
+
 @app.route('/api/orders', methods=['POST'])
 def create_order():
     try:
