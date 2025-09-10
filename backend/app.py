@@ -22,27 +22,6 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 ORDERS_DIR = 'orders'
 os.makedirs(ORDERS_DIR, exist_ok=True)
 
-# ✅ FUNÇÕES AUXILIARES (MOVIDAS PARA DENTRO DA ESTRUTURA)
-def gerar_id_pedido():
-    """Gerar ID único para o pedido"""
-    timestamp = int(datetime.now().timestamp())
-    return f"{timestamp}"
-
-def salvar_pedido(pedido):
-    """Salvar pedido no arquivo JSON"""
-    pedidos_file = 'pedidos.json'
-    
-    if os.path.exists(pedidos_file):
-        with open(pedidos_file, 'r', encoding='utf-8') as f:
-            pedidos = json.load(f)
-    else:
-        pedidos = []
-    
-    pedidos.append(pedido)
-    
-    with open(pedidos_file, 'w', encoding='utf-8') as f:
-        json.dump(pedidos, f, ensure_ascii=False, indent=2)
-
 # Startup checks - usando app_context em vez de before_first_request
 with app.app_context():
     logger.info("🍔 Burger House API starting...")
@@ -123,71 +102,6 @@ def get_burgers():
     ]
     return jsonify({"burgers": burgers})
 
-# ✅✅✅ ROTA CORRIGIDA: POST /api/pedidos ✅✅✅
-@app.route('/api/pedidos', methods=['POST'])
-def criar_pedido():
-    try:
-        data = request.get_json()
-        logger.info(f"📝 Creating new order: {data}")
-        
-        # Gerar timestamp correto com timezone do Brasil
-        agora = datetime.now(BRAZIL_TZ)
-        
-        pedido = {
-            'id': gerar_id_pedido(),
-            'cliente': data.get('cliente'),
-            'telefone': data.get('telefone'),
-            'itens': data.get('itens'),
-            'total': data.get('total'),
-            'status': 'CONFIRMED',
-            'data_pedido': agora.isoformat(),
-            'data_formatada': agora.strftime('%d/%m/%Y %H:%M:%S'),
-            'timestamp': agora.timestamp()
-        }
-        
-        salvar_pedido(pedido)
-        logger.info(f"✅ Order created successfully: {pedido['id']}")
-        
-        return jsonify({'success': True, 'pedido_id': pedido['id']})
-    
-    except Exception as e:
-        logger.error(f"❌ Error creating order: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-# ✅✅✅ ROTA CORRIGIDA: GET /api/pedidos ✅✅✅
-@app.route('/api/pedidos', methods=['GET'])
-def listar_pedidos():
-    try:
-        logger.info("📋 Loading pedidos...")
-        pedidos_file = 'pedidos.json'
-        
-        if not os.path.exists(pedidos_file):
-            logger.info("📄 No pedidos file found, returning empty array")
-            return jsonify([])
-        
-        with open(pedidos_file, 'r', encoding='utf-8') as f:
-            pedidos = json.load(f)
-        
-        # Processar pedidos para garantir que tenham data
-        for pedido in pedidos:
-            if 'data_formatada' not in pedido:
-                try:
-                    dt = datetime.fromisoformat(pedido['data_pedido'].replace('Z', '+00:00'))
-                    dt_brasil = dt.astimezone(BRAZIL_TZ)
-                    pedido['data_formatada'] = dt_brasil.strftime('%d/%m/%Y %H:%M:%S')
-                except:
-                    pedido['data_formatada'] = 'Data não disponível'
-        
-        # Ordenar por timestamp mais recente
-        pedidos.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
-        
-        logger.info(f"✅ Returning {len(pedidos)} pedidos")
-        return jsonify(pedidos)
-    
-    except Exception as e:
-        logger.error(f"❌ Error listing pedidos: {str(e)}")
-        return jsonify([])
-
 # ✅✅✅ NOVA ROTA ADICIONADA: GET /api/orders ✅✅✅
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
@@ -209,6 +123,38 @@ def get_orders():
     except Exception as e:
         logger.error(f"❌ Error getting orders: {str(e)}")
         return jsonify({"error": "Failed to get orders"}), 500
+
+@app.route('/api/pedidos', methods=['POST'])
+def criar_pedido():
+    try:
+        data = request.get_json()
+        
+        # Gerar timestamp correto com timezone do Brasil
+        agora = datetime.now(BRAZIL_TZ)
+        
+        pedido = {
+            'id': gerar_id_pedido(),
+            'cliente': data.get('cliente'),
+            'telefone': data.get('telefone'),
+            'itens': data.get('itens'),
+            'total': data.get('total'),
+            'status': 'CONFIRMED',
+            'data_pedido': agora.isoformat(),
+            'data_formatada': agora.strftime('%d/%m/%Y %H:%M:%S'),
+            'timestamp': agora.timestamp()
+        }
+        
+        salvar_pedido(pedido)
+        
+        return jsonify({'success': True, 'pedido_id': pedido['id']})
+    
+    except Exception as e:
+        print(f"Erro ao criar pedido: {e}")
+        return jsonify({'error': str(e)}), 500
+        
+    except Exception as e:
+        logger.error(f"Error creating order: {str(e)}")
+        return jsonify({"error": "Failed to create order"}), 500
     
 @app.route('/api/orders/<order_id>', methods=['PUT'])
 def update_order_status(order_id):
@@ -292,3 +238,52 @@ if __name__ == '__main__':
         port=port,
         debug=False
     )
+
+    def gerar_id_pedido():
+    """Gerar ID único para o pedido"""
+    timestamp = int(datetime.now().timestamp())
+    return f"{timestamp}"
+
+def salvar_pedido(pedido):
+    """Salvar pedido no arquivo JSON"""
+    pedidos_file = 'pedidos.json'
+    
+    if os.path.exists(pedidos_file):
+        with open(pedidos_file, 'r', encoding='utf-8') as f:
+            pedidos = json.load(f)
+    else:
+        pedidos = []
+    
+    pedidos.append(pedido)
+    
+    with open(pedidos_file, 'w', encoding='utf-8') as f:
+        json.dump(pedidos, f, ensure_ascii=False, indent=2)
+
+@app.route('/api/pedidos', methods=['GET'])
+def listar_pedidos():
+    try:
+        pedidos_file = 'pedidos.json'
+        
+        if not os.path.exists(pedidos_file):
+            return jsonify([])
+        
+        with open(pedidos_file, 'r', encoding='utf-8') as f:
+            pedidos = json.load(f)
+        
+        # Processar pedidos para garantir que tenham data
+        for pedido in pedidos:
+            if 'data_formatada' not in pedido:
+                try:
+                    dt = datetime.fromisoformat(pedido['data_pedido'].replace('Z', '+00:00'))
+                    dt_brasil = dt.astimezone(BRAZIL_TZ)
+                    pedido['data_formatada'] = dt_brasil.strftime('%d/%m/%Y %H:%M:%S')
+                except:
+                    pedido['data_formatada'] = 'Data não disponível'
+        
+        pedidos.sort(key=lambda x: x.get('timestamp', 0), reverse=True)
+        
+        return jsonify(pedidos)
+    
+    except Exception as e:
+        print(f"Erro ao listar pedidos: {e}")
+        return jsonify([])
