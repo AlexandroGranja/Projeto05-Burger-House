@@ -313,3 +313,60 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Adicionar função para recarregar manualmente
 window.recarregarPedidos = carregarPedidos;
+
+// Função para formatar data
+function formatDate(isoString) {
+    if (!isoString) return "Data não disponível";
+    const date = new Date(isoString);
+    if (isNaN(date.getTime())) return "Data inválida";
+    const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return date.toLocaleDateString('pt-BR', options);
+}
+
+
+
+
+// Função para criar o card de pedido
+function createOrderCard(order) {
+    const orderCard = document.createElement("div");
+    orderCard.className = `order-card ${order.status}`;
+    orderCard.onclick = () => showOrderDetails(order);
+
+    // ✅ CORREÇÃO: Garantir que a data seja válida antes de exibir
+    const orderDate = order.timestamp ? formatDate(order.timestamp) : "Data não disponível";
+
+    orderCard.innerHTML = `
+<div class="order-card-body">
+    <div class="order-header">
+        <div class="flex-grow-1">
+            <div class="order-id">Pedido #${order.id.substr(-6)}</div>
+            <div class="order-time">${orderDate}</div>
+        </div>
+        <span class="status-badge status-${order.status}">
+            ${getStatusText(order.status)}
+        </span>
+    </div>
+    
+    <div class="customer-info">
+        <div class="customer-name">
+            <i class="fas fa-user me-2 text-muted"></i>${order.customer.name}
+        </div>
+        <div class="customer-phone">
+            <i class="fas fa-phone me-2 text-muted"></i>${order.customer.phone}
+        </div>
+    </div>
+    
+    <div class="order-summary">
+        <span class="items-count">
+            <i class="fas fa-shopping-bag me-1 text-muted"></i>
+            ${order.items.length} ${order.items.length === 1 ? 'item' : 'itens'}
+        </span>
+        <span class="order-total">R$ ${order.total.toFixed(2)}</span>
+    </div>
+</div>
+`;
+
+    return orderCard;
+}
+
+
