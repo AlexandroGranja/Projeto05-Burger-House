@@ -1625,7 +1625,7 @@
             document.getElementById('detail-customer-complement').textContent = order.customer.complement || 'Nenhum';
             document.getElementById('detail-payment-method').textContent = order.customer.paymentMethod;
             document.getElementById('detail-total').textContent = `R$ ${order.total.toFixed(2)}`;
-            document.getElementById('detail-date').textContent = formatDate(order.timestamp);            // Set status badge
+            document.getElementById(\'detail-date\').textContent = formatDate(order.timestamp);            // Set status badge
             const statusBadge = document.getElementById('detail-status');
             statusBadge.textContent = getStatusText(order.status);
             statusBadge.className = `status-badge status-${order.status}`;
@@ -1819,7 +1819,8 @@
             showToast('Configurações salvas com sucesso!', 'success');
         }
 
-        // Utility Functions
+
+
         function formatDate(isoString) {
             if (!isoString) return "Data não disponível";
             const date = new Date(isoString);
@@ -1827,11 +1828,6 @@
             const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' };
             return date.toLocaleDateString('pt-BR', options);
         }
-
-        function getStatusText(status) {
-            const statusMap = {
-                'pending': 'Pendente',
-                'accepted': 'Aceito',
                 'delivery': 'Em Entrega',
                 'completed': 'Concluído'
             };
@@ -1845,7 +1841,6 @@
 
             // ✅ CORREÇÃO: Garantir que a data seja válida antes de exibir
             const orderDate = order.timestamp ? formatDate(order.timestamp) : "Data não disponível";
-
             orderCard.innerHTML = `
         <div class="order-card-body">
             <div class="order-header">
