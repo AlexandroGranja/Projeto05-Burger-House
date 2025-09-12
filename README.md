@@ -19,14 +19,13 @@
 
 ## 📸 Preview
 
-> **Nota:** Adicione screenshots ou GIF do projeto funcionando aqui
 
 <img width="1363" height="593" alt="image" src="https://github.com/user-attachments/assets/11f6b8e5-d027-4f26-bf10-9eb33a2eb1da" />
 
 
 ## 🚀 Demo Live
 
-- **🌐 Site:** [Em breve - Deploy no Netlify/Vercel]
+- **🌐 Site:** (https://burger-house.up.railway.app/)
 - **📱 Mobile:** Totalmente responsivo
 - **⚡ API:** Documentação interativa disponível
 
