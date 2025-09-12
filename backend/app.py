@@ -143,13 +143,14 @@ def create_order():
         # Gerar ID único para o pedido
         order_id = str(uuid.uuid4())[:8]
         
-        # Criar timestamp com timezone do Brasil
+       # Criar timestamp com timezone do Brasil
         agora = datetime.now(BRAZIL_TZ)
-        
+
         # Construir objeto do pedido
         order = {
             'id': order_id,
-            'created_at': agora.isoformat(),
+            # Garante formato sem microssegundos e com offset (-03:00)
+            'created_at': agora.isoformat(timespec='seconds'),
             'status': 'pending',
             'customer': {
                 'name': data.get('cliente', data.get('customer', {}).get('name', 'Cliente não informado')),
@@ -162,6 +163,7 @@ def create_order():
             'items': data.get('itens', data.get('items', [])),
             'total': float(data.get('total', 0))
         }
+
         
         # Salvar pedido em arquivo JSON
         order_filename = os.path.join(ORDERS_DIR, f"{order_id}.json")

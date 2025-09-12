@@ -1598,7 +1598,10 @@
             const today = new Date().toDateString();
 
             orders.forEach(order => {
-                if (new Date(order.created_at).toDateString() === today) stats.total += order.total;
+                const orderDate = parseOrderDate(order.created_at);
+                if (orderDate && orderDate.toDateString() === today) {
+                    stats.total += order.total;
+                }
                 stats[order.status] = (stats[order.status] || 0) + 1;
             });
 
