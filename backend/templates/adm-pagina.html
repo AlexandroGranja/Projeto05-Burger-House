@@ -1259,14 +1259,75 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
         // Configuration
-      const API_BASE_URL = window.location.origin;       const N8N_WEBHOOK_URL = 'https://alexandro-granja.up.railway.app/webhook/order-status-update'; // URL do webhook n8n
+        // ========== SUBSTITUA O SCRIPT EXISTENTE NO SEU HTML POR ESTE ==========
+
+        // Configuration
+        const API_BASE_URL = window.location.origin;
+        const N8N_WEBHOOK_URL = 'https://alexandro-granja.up.railway.app/webhook/order-status-update';
         const N8N_STATUS_WEBHOOK_URL = "https://alexandro-granja.up.railway.app/webhook/order-status-update";
+
         // Application State
         let orders = [];
         let currentFilter = 'all';
         let currentSearchTerm = '';
         let updateInterval;
         let currentSection = 'orders';
+
+        // ========== FUNÇÃO formatDate ROBUSTA ==========
+        function formatDate(dateInput) {
+            if (!dateInput) {
+                console.warn('⚠️ Data não fornecida para formatação');
+                return "Data não disponível";
+            }
+
+            try {
+                let date;
+
+                // Se já é uma string formatada brasileira, retorna
+                if (typeof dateInput === 'string' && dateInput.includes('/') && dateInput.length < 20) {
+                    return dateInput;
+                }
+
+                // Se é timestamp (número)
+                if (typeof dateInput === 'number') {
+                    date = new Date(dateInput);
+                }
+                // Se é string ISO ou outro formato
+                else if (typeof dateInput === 'string') {
+                    date = new Date(dateInput);
+                }
+                // Se já é um objeto Date
+                else if (dateInput instanceof Date) {
+                    date = dateInput;
+                }
+                else {
+                    console.error('❌ Formato de data inválido:', dateInput);
+                    return "Formato inválido";
+                }
+
+                // Verificar se a data é válida
+                if (isNaN(date.getTime())) {
+                    console.error('❌ Data inválida:', dateInput);
+                    return "Data inválida";
+                }
+
+                // Formatar no padrão brasileiro
+                const options = {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    timeZone: 'America/Sao_Paulo'
+                };
+
+                return date.toLocaleDateString('pt-BR', options);
+
+            } catch (error) {
+                console.error('❌ Erro ao formatar data:', error, 'Input:', dateInput);
+                return "Erro na formatação";
+            }
+        }
 
         // Initialize Application
         document.addEventListener('DOMContentLoaded', function () {
@@ -1279,7 +1340,6 @@
 
         function initializeApp() {
             updateLastUpdateTime();
-            // Set default dates for reports
             const today = new Date();
             const oneWeekAgo = new Date();
             oneWeekAgo.setDate(today.getDate() - 7);
@@ -1289,31 +1349,22 @@
         }
 
         function setupEventListeners() {
-            // Close order details
             document.getElementById('close-details').addEventListener('click', closeOrderDetails);
 
-            // Filter options
             document.querySelectorAll('.filter-option').forEach(option => {
                 option.addEventListener('click', handleFilterChange);
             });
 
-            // Search input
             document.getElementById('search-order').addEventListener('input', handleSearch);
-
-            // Refresh button
             document.getElementById('refresh-orders').addEventListener('click', handleRefresh);
-
-            // Sidebar toggle for mobile
             document.getElementById('toggle-sidebar')?.addEventListener('click', toggleSidebar);
 
-            // Close modal when clicking outside
             document.getElementById('order-details').addEventListener('click', function (e) {
                 if (e.target === this) {
                     closeOrderDetails();
                 }
             });
 
-            // Navigation between sections
             document.querySelectorAll('.sidebar .nav-link').forEach(link => {
                 link.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -1322,7 +1373,6 @@
                     const section = this.getAttribute('data-section');
                     switchSection(section);
 
-                    // Update active state
                     document.querySelectorAll('.sidebar .nav-link').forEach(item => {
                         item.classList.remove('active');
                     });
@@ -1330,10 +1380,7 @@
                 });
             });
 
-            // Generate report button
             document.getElementById('generate-report').addEventListener('click', generateReport);
-
-            // Save settings button
             document.getElementById('save-settings').addEventListener('click', saveSettings);
         }
 
@@ -1342,16 +1389,13 @@
         }
 
         function switchSection(section) {
-            // Hide all sections
             document.querySelectorAll('.section-content').forEach(el => {
                 el.classList.remove('active');
             });
 
-            // Show selected section
             document.getElementById(`${section}-section`).classList.add('active');
             currentSection = section;
 
-            // Update header title
             const headerTitle = document.querySelector('.header h4');
             switch (section) {
                 case 'orders':
@@ -1369,13 +1413,11 @@
         function handleFilterChange(e) {
             e.preventDefault();
 
-            // Update filter UI
             document.querySelectorAll('.filter-option').forEach(item => {
                 item.classList.remove('active');
             });
             this.classList.add('active');
 
-            // Apply filter
             currentFilter = this.getAttribute('data-filter');
             renderOrders();
         }
@@ -1402,44 +1444,69 @@
 
         function startAutoUpdate() {
             updateInterval = setInterval(() => {
-                loadOrders(true); // Silent update
-            }, 30000); // Update every 30 seconds
+                loadOrders(true);
+            }, 30000);
         }
 
-        // API Functions
+        // ========== FUNÇÃO PRINCIPAL DE CARREGAMENTO CORRIGIDA ==========
         async function loadOrders(silent = false) {
             try {
                 console.log('🔄 Carregando pedidos...');
 
-                const response = await fetch(`${API_BASE_URL}/api/orders`);
-                console.log('📊 Status:', response.status);
+                // CORREÇÃO: Usar o endpoint correto
+                const response = await fetch(`${API_BASE_URL}/api/pedidos`);
+                console.log('📊 Status da resposta:', response.status);
 
                 if (!response.ok) {
-                    throw new Error('Erro HTTP: ' + response.status);
+                    throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
                 }
 
                 const data = await response.json();
-                console.log('📦 Dados recebidos:', data);
+                console.log('📦 Dados brutos recebidos:', data);
 
-                // ✅ CORREÇÃO DEFINITIVA - Versão melhorada:
+                // CORREÇÃO: Normalizar dados para o formato esperado pelo HTML
+                let rawOrders = [];
+
                 if (Array.isArray(data)) {
-                    orders = data;
-                } else if (Array.isArray(data.orders)) {
-                    orders = data.orders;
-                } else if (data.data && Array.isArray(data.data.orders)) {
-                    orders = data.data.orders;
+                    rawOrders = data;
+                } else if (data.pedidos && Array.isArray(data.pedidos)) {
+                    rawOrders = data.pedidos;
+                } else if (data.orders && Array.isArray(data.orders)) {
+                    rawOrders = data.orders;
                 } else {
-                    orders = [];
                     console.error('❌ Estrutura de dados inesperada:', data);
+                    rawOrders = [];
                 }
 
-                console.log('✅ Pedidos carregados:', orders.length);
+                // CORREÇÃO: Converter dados da API para o formato esperado pelo HTML
+                orders = rawOrders.map(pedido => {
+                    try {
+                        return {
+                            id: pedido.id || Math.random().toString(36).substr(2, 9),
+                            status: mapearStatus(pedido.status),
+                            timestamp: pedido.timestamp || pedido.data || pedido.created_at || new Date().toISOString(),
+                            created_at: pedido.created_at || pedido.data || new Date().toISOString(),
+                            customer: {
+                                name: pedido.customer?.name || pedido.cliente || pedido.nome_cliente || 'Cliente não informado',
+                                phone: pedido.customer?.phone || pedido.telefone || pedido.phone || 'Não informado',
+                                address: pedido.customer?.address || pedido.endereco || pedido.address || 'Não informado',
+                                neighborhood: pedido.customer?.neighborhood || pedido.bairro || pedido.neighborhood || 'Não informado',
+                                complement: pedido.customer?.complement || pedido.complemento || pedido.complement || '',
+                                paymentMethod: pedido.customer?.paymentMethod || pedido.forma_pagamento || pedido.payment_method || 'Não informado'
+                            },
+                            items: processarItens(pedido.items || pedido.itens || []),
+                            total: Number(pedido.total || 0)
+                        };
+                    } catch (error) {
+                        console.error('❌ Erro ao processar pedido:', error, pedido);
+                        return null;
+                    }
+                }).filter(order => order !== null);
 
-                // Debug: verifique o primeiro pedido (se existir)
+                console.log('✅ Pedidos processados:', orders.length);
+
                 if (orders.length > 0) {
-                    console.log('📋 Exemplo de pedido:', orders[0]);
-                    console.log('📅 Data do primeiro pedido:', orders[0].created_at);
-                    console.log('🔍 Tipo da data:', typeof orders[0].created_at);
+                    console.log('📋 Exemplo de pedido processado:', orders[0]);
                 }
 
                 renderOrders();
@@ -1451,16 +1518,53 @@
                 }
 
             } catch (error) {
-                console.error('❌ Erro:', error);
+                console.error('❌ Erro ao carregar pedidos:', error);
                 if (!silent) {
                     showToast('Erro ao carregar pedidos: ' + error.message, 'danger');
                 }
+
+                // Em caso de erro, garantir que a interface não quebre
+                orders = [];
+                renderOrders();
             }
+        }
+
+        // CORREÇÃO: Função para mapear status da API para o formato esperado
+        function mapearStatus(status) {
+            if (!status) return 'pending';
+
+            const statusMap = {
+                'pendente': 'pending',
+                'confirmado': 'accepted',
+                'aceito': 'accepted',
+                'preparando': 'accepted',
+                'pronto': 'delivery',
+                'entrega': 'delivery',
+                'concluido': 'completed',
+                'concluído': 'completed',
+                'cancelado': 'cancelled'
+            };
+
+            const statusLower = status.toLowerCase();
+            return statusMap[statusLower] || status.toLowerCase();
+        }
+
+        // CORREÇÃO: Função para processar itens
+        function processarItens(itens) {
+            if (!Array.isArray(itens)) return [];
+
+            return itens.map(item => ({
+                name: item.name || item.nome || item.produto || 'Item',
+                description: item.description || item.descricao || '',
+                quantity: Number(item.quantity || item.quantidade || 1),
+                price: Number(item.price || item.preco || item.valor || 0)
+            }));
         }
 
         async function updateOrderStatus(orderId, newStatus) {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+                // CORREÇÃO: Usar endpoint correto
+                const response = await fetch(`${API_BASE_URL}/api/pedidos/${orderId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1472,10 +1576,8 @@
                     throw new Error('Erro ao atualizar status do pedido');
                 }
 
-                // Send notification to n8n webhook
                 await sendStatusUpdateToN8N(orderId, newStatus);
 
-                // Update local state
                 const orderIndex = orders.findIndex(order => order.id === orderId);
                 if (orderIndex !== -1) {
                     orders[orderIndex].status = newStatus;
@@ -1489,7 +1591,7 @@
                 showToast(`Pedido ${statusText.toLowerCase()}!`, 'success');
 
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('❌ Erro ao atualizar status:', error);
                 showToast('Erro ao atualizar status do pedido', 'danger');
             }
         }
@@ -1499,7 +1601,6 @@
                 const order = orders.find(o => o.id === orderId);
                 if (!order) return;
 
-                // Alteração importante: usar N8N_STATUS_WEBHOOK_URL em vez de N8N_WEBHOOK_URL
                 const response = await fetch(N8N_STATUS_WEBHOOK_URL, {
                     method: 'POST',
                     headers: {
@@ -1518,24 +1619,20 @@
                     throw new Error('Erro ao enviar status para n8n');
                 }
 
-                console.log('Status enviado para n8n com sucesso');
+                console.log('✅ Status enviado para n8n com sucesso');
             } catch (error) {
-                console.error('Erro ao enviar notificação para n8n:', error);
+                console.error('❌ Erro ao enviar notificação para n8n:', error);
             }
         }
 
-        // Render Functions
         function renderOrders() {
             const ordersContainer = document.getElementById('orders-container');
             const noOrders = document.getElementById('no-orders');
 
-            // Clear container
             ordersContainer.innerHTML = '';
 
-            // Filter orders
             let filteredOrders = filterOrders();
 
-            // Check if there are orders
             if (filteredOrders.length === 0) {
                 noOrders.style.display = 'block';
                 ordersContainer.style.display = 'none';
@@ -1545,7 +1642,6 @@
             noOrders.style.display = 'none';
             ordersContainer.style.display = 'grid';
 
-            // Render orders
             filteredOrders.forEach(order => {
                 const orderCard = createOrderCard(order);
                 ordersContainer.appendChild(orderCard);
@@ -1553,15 +1649,12 @@
         }
 
         function filterOrders() {
-            // ✅ Garante que orders seja sempre um array
             let filtered = Array.isArray(orders) ? [...orders] : [];
 
-            // Apply status filter
             if (currentFilter !== 'all') {
                 filtered = filtered.filter(order => order.status === currentFilter);
             }
 
-            // Apply search filter
             if (currentSearchTerm) {
                 filtered = filtered.filter(order =>
                     order.id.toLowerCase().includes(currentSearchTerm) ||
@@ -1578,42 +1671,44 @@
             orderCard.className = `order-card ${order.status}`;
             orderCard.onclick = () => showOrderDetails(order);
 
+            // CORREÇÃO: Usar a função formatDate corrigida
+            const dataFormatada = formatDate(order.timestamp);
+
             orderCard.innerHTML = `
-                <div class="order-card-body">
-                    <div class="order-header">
-                        <div class="flex-grow-1">
-                            <div class="order-id">Pedido #${order.id.substr(-6)}</div>
-                            <div class="order-time">${formatDate(order.timestamp)}</div>
-                        </div>
-                        <span class="status-badge status-${order.status}">
-                            ${getStatusText(order.status)}
-                        </span>
-                    </div>
-                    
-                    <div class="customer-info">
-                        <div class="customer-name">
-                            <i class="fas fa-user me-2 text-muted"></i>${order.customer.name}
-                        </div>
-                        <div class="customer-phone">
-                            <i class="fas fa-phone me-2 text-muted"></i>${order.customer.phone}
-                        </div>
-                    </div>
-                    
-                    <div class="order-summary">
-                        <span class="items-count">
-                            <i class="fas fa-shopping-bag me-1 text-muted"></i>
-                            ${order.items.length} ${order.items.length === 1 ? 'item' : 'itens'}
-                        </span>
-                        <span class="order-total">R$ ${order.total.toFixed(2)}</span>
-                    </div>
+        <div class="order-card-body">
+            <div class="order-header">
+                <div class="flex-grow-1">
+                    <div class="order-id">Pedido #${String(order.id).substr(-6)}</div>
+                    <div class="order-time">${dataFormatada}</div>
                 </div>
-            `;
+                <span class="status-badge status-${order.status}">
+                    ${getStatusText(order.status)}
+                </span>
+            </div>
+            
+            <div class="customer-info">
+                <div class="customer-name">
+                    <i class="fas fa-user me-2 text-muted"></i>${order.customer.name}
+                </div>
+                <div class="customer-phone">
+                    <i class="fas fa-phone me-2 text-muted"></i>${order.customer.phone}
+                </div>
+            </div>
+            
+            <div class="order-summary">
+                <span class="items-count">
+                    <i class="fas fa-shopping-bag me-1 text-muted"></i>
+                    ${order.items.length} ${order.items.length === 1 ? 'item' : 'itens'}
+                </span>
+                <span class="order-total">R$ ${order.total.toFixed(2)}</span>
+            </div>
+        </div>
+    `;
 
             return orderCard;
         }
 
         function showOrderDetails(order) {
-            // Populate order details
             document.getElementById('detail-order-id').textContent = order.id;
             document.getElementById('detail-customer-name').textContent = order.customer.name;
             document.getElementById('detail-customer-phone').textContent = order.customer.phone;
@@ -1622,12 +1717,12 @@
             document.getElementById('detail-customer-complement').textContent = order.customer.complement || 'Nenhum';
             document.getElementById('detail-payment-method').textContent = order.customer.paymentMethod;
             document.getElementById('detail-total').textContent = `R$ ${order.total.toFixed(2)}`;
-            document.getElementById('detail-date').textContent = formatDate(order.timestamp);            // Set status badge
+            document.getElementById('detail-date').textContent = formatDate(order.timestamp);
+
             const statusBadge = document.getElementById('detail-status');
             statusBadge.textContent = getStatusText(order.status);
             statusBadge.className = `status-badge status-${order.status}`;
 
-            // Populate items
             const itemsContainer = document.getElementById('detail-items');
             itemsContainer.innerHTML = '';
 
@@ -1635,20 +1730,17 @@
                 const itemRow = document.createElement('div');
                 itemRow.className = 'item-row';
                 itemRow.innerHTML = `
-                    <div class="item-info">
-                        <div class="item-name">${item.name}</div>
-                        <div class="item-description">${item.description || ''}</div>
-                    </div>
-                    <div class="item-quantity">${item.quantity}x</div>
-                    <div class="item-price">R$ ${(item.price * item.quantity).toFixed(2)}</div>
-                `;
+            <div class="item-info">
+                <div class="item-name">${item.name}</div>
+                <div class="item-description">${item.description || ''}</div>
+            </div>
+            <div class="item-quantity">${item.quantity}x</div>
+            <div class="item-price">R$ ${(item.price * item.quantity).toFixed(2)}</div>
+        `;
                 itemsContainer.appendChild(itemRow);
             });
 
-            // Setup action buttons
             setupActionButtons(order);
-
-            // Show modal
             document.getElementById('order-details').style.display = 'flex';
         }
 
@@ -1656,14 +1748,12 @@
             const actionsContainer = document.getElementById('detail-actions');
             actionsContainer.innerHTML = '';
 
-            // Close button
             const closeBtn = document.createElement('button');
             closeBtn.className = 'btn-action btn-close';
             closeBtn.innerHTML = '<i class="fas fa-times me-1"></i>Fechar';
             closeBtn.onclick = closeOrderDetails;
             actionsContainer.appendChild(closeBtn);
 
-            // Status-specific buttons
             if (order.status === 'pending') {
                 const acceptBtn = document.createElement('button');
                 acceptBtn.className = 'btn-action btn-accept';
@@ -1703,23 +1793,18 @@
                 stats[order.status] = (stats[order.status] || 0) + 1;
             });
 
-            // Update stat cards
             document.getElementById('stat-pending').textContent = stats.pending;
             document.getElementById('stat-accepted').textContent = stats.accepted;
             document.getElementById('stat-delivery').textContent = stats.delivery;
             document.getElementById('stat-total').textContent = `R$ ${stats.total.toFixed(2)}`;
 
-            // Update notification badge
             document.getElementById('pending-count').textContent = stats.pending;
             document.getElementById('pending-count').style.display = stats.pending > 0 ? 'flex' : 'none';
         }
 
-        // Reports and Analytics Functions
         function generateReport() {
-            // Simulate report generation
             showToast('Relatório gerado com sucesso!', 'success');
 
-            // Update report stats with sample data
             document.getElementById('report-total-orders').textContent = orders.length;
 
             const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
@@ -1733,12 +1818,10 @@
             }, 0);
             document.getElementById('report-total-items').textContent = totalItems;
 
-            // Update charts
             updateCharts();
         }
 
         function setupCharts() {
-            // Initialize charts with empty data
             window.salesChart = new Chart(document.getElementById('sales-chart'), {
                 type: 'line',
                 data: {
@@ -1793,31 +1876,23 @@
         }
 
         function updateCharts() {
-            // Sample data for demonstration
             const salesData = [120, 190, 300, 500, 200, 300, 450];
             const productsData = [65, 59, 80, 45, 56];
             const hoursData = [12, 19, 8, 15, 10, 22, 18, 14, 9, 7];
 
-            // Update sales chart
             window.salesChart.data.datasets[0].data = salesData;
             window.salesChart.update();
 
-            // Update products chart
             window.productsChart.data.datasets[0].data = productsData;
             window.productsChart.update();
 
-            // Update hours chart
             window.hoursChart.data.datasets[0].data = hoursData;
             window.hoursChart.update();
         }
 
         function saveSettings() {
-            // Simulate saving settings
             showToast('Configurações salvas com sucesso!', 'success');
         }
-
-        // Utility Functions
-
 
         function getStatusText(status) {
             const statusMap = {
@@ -1828,8 +1903,6 @@
             };
             return statusMap[status] || status;
         }
-
-
 
         function updateLastUpdateTime() {
             const now = new Date();
@@ -1852,14 +1925,14 @@
             toast.id = toastId;
 
             toast.innerHTML = `
-                <div class="d-flex">
-                    <div class="toast-body">
-                        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-                        ${message}
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-                </div>
-            `;
+        <div class="d-flex">
+            <div class="toast-body">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                ${message}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
 
             toastContainer.appendChild(toast);
 
@@ -1877,16 +1950,12 @@
 
         function logout() {
             if (confirm('Tem certeza que deseja sair?')) {
-                // Clear any stored data
                 localStorage.clear();
                 sessionStorage.clear();
-
-                // Redirect to login page or reload
                 window.location.reload();
             }
         }
 
-        // Cleanup on page unload
         window.addEventListener('beforeunload', function () {
             if (updateInterval) {
                 clearInterval(updateInterval);
