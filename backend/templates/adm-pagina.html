@@ -1258,52 +1258,75 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        // ================= CONFIGURAÇÃO =================
+        // Configuration
         const API_BASE_URL = window.location.origin;
+        const N8N_WEBHOOK_URL = 'https://alexandro-granja.up.railway.app/webhook/order-status-update';
         const N8N_STATUS_WEBHOOK_URL = "https://alexandro-granja.up.railway.app/webhook/order-status-update";
 
-        // Estado da aplicação
+        // Application State
         let orders = [];
         let currentFilter = 'all';
         let currentSearchTerm = '';
         let updateInterval;
         let currentSection = 'orders';
 
-        // ================= FUNÇÃO formatDate ROBUSTA =================
+        // ========== FUNÇÃO formatDate ROBUSTA ==========
         function formatDate(dateInput) {
-            if (!dateInput) return "Data não disponível";
+            if (!dateInput) {
+                console.warn('⚠️ Data não fornecida para formatação');
+                return "Data não disponível";
+            }
+
             try {
                 let date;
 
+                // Se já é uma string formatada brasileira, retorna
                 if (typeof dateInput === 'string' && dateInput.includes('/') && dateInput.length < 20) {
                     return dateInput;
-                } else if (typeof dateInput === 'number') {
+                }
+
+                // Se é timestamp (número)
+                if (typeof dateInput === 'number') {
                     date = new Date(dateInput);
-                } else if (typeof dateInput === 'string') {
+                }
+                // Se é string ISO ou outro formato
+                else if (typeof dateInput === 'string') {
                     date = new Date(dateInput);
-                } else if (dateInput instanceof Date) {
+                }
+                // Se já é um objeto Date
+                else if (dateInput instanceof Date) {
                     date = dateInput;
-                } else {
+                }
+                else {
+                    console.error('❌ Formato de data inválido:', dateInput);
                     return "Formato inválido";
                 }
 
-                if (isNaN(date.getTime())) return "Data inválida";
+                // Verificar se a data é válida
+                if (isNaN(date.getTime())) {
+                    console.error('❌ Data inválida:', dateInput);
+                    return "Data inválida";
+                }
 
-                return date.toLocaleDateString('pt-BR', {
+                // Formatar no padrão brasileiro
+                const options = {
                     year: 'numeric',
                     month: '2-digit',
                     day: '2-digit',
                     hour: '2-digit',
                     minute: '2-digit',
                     timeZone: 'America/Sao_Paulo'
-                });
+                };
+
+                return date.toLocaleDateString('pt-BR', options);
+
             } catch (error) {
-                console.error('Erro ao formatar data:', error);
+                console.error('❌ Erro ao formatar data:', error, 'Input:', dateInput);
                 return "Erro na formatação";
             }
         }
 
-        // ================= INICIALIZAÇÃO =================
+        // Initialize Application
         document.addEventListener('DOMContentLoaded', function () {
             initializeApp();
             setupEventListeners();
@@ -1334,7 +1357,9 @@
             document.getElementById('toggle-sidebar')?.addEventListener('click', toggleSidebar);
 
             document.getElementById('order-details').addEventListener('click', function (e) {
-                if (e.target === this) closeOrderDetails();
+                if (e.target === this) {
+                    closeOrderDetails();
+                }
             });
 
             document.querySelectorAll('.sidebar .nav-link').forEach(link => {
@@ -1360,52 +1385,179 @@
             document.getElementById('sidebar').classList.toggle('show');
         }
 
-        // ================= ORDERS =================
+        function switchSection(section) {
+            document.querySelectorAll('.section-content').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            document.getElementById(`${section}-section`).classList.add('active');
+            currentSection = section;
+
+            const headerTitle = document.querySelector('.header h4');
+            switch (section) {
+                case 'orders':
+                    headerTitle.innerHTML = '<i class="fas fa-tachometer-alt me-2 text-primary"></i>Gerenciamento de Pedidos';
+                    break;
+                case 'analytics':
+                    headerTitle.innerHTML = '<i class="fas fa-chart-bar me-2 text-primary"></i>Relatórios e Análises';
+                    break;
+                case 'settings':
+                    headerTitle.innerHTML = '<i class="fas fa-cog me-2 text-primary"></i>Configurações do Sistema';
+                    break;
+            }
+        }
+
+        function handleFilterChange(e) {
+            e.preventDefault();
+
+            document.querySelectorAll('.filter-option').forEach(item => {
+                item.classList.remove('active');
+            });
+            this.classList.add('active');
+
+            currentFilter = this.getAttribute('data-filter');
+            renderOrders();
+        }
+
+        function handleSearch() {
+            currentSearchTerm = this.value.toLowerCase();
+            renderOrders();
+        }
+
+        function handleRefresh() {
+            const refreshBtn = document.getElementById('refresh-orders');
+            const icon = refreshBtn.querySelector('i');
+
+            icon.className = 'fas fa-sync-alt fa-spin';
+
+            loadOrders().finally(() => {
+                setTimeout(() => {
+                    icon.className = 'fas fa-sync-alt';
+                }, 500);
+            });
+
+            showToast('Pedidos atualizados!', 'success');
+        }
+
+        function startAutoUpdate() {
+            updateInterval = setInterval(() => {
+                loadOrders(true);
+            }, 30000);
+        }
+
+        // ========== FUNÇÃO PRINCIPAL DE CARREGAMENTO ATUALIZADA ==========
         async function loadOrders(silent = false) {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/pedidos`);
-                if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                console.log('🔄 Carregando pedidos...');
+
+                // ✅ USAR O NOVO ENDPOINT /api/orders (compatível com backend atualizado)
+                const response = await fetch(`${API_BASE_URL}/api/orders`);
+                console.log('📊 Status da resposta:', response.status);
+
+                if (!response.ok) {
+                    // Fallback para o endpoint antigo se o novo falhar
+                    console.log('⚠️ Tentando endpoint antigo /api/pedidos...');
+                    const fallbackResponse = await fetch(`${API_BASE_URL}/api/pedidos`);
+
+                    if (!fallbackResponse.ok) {
+                        throw new Error(`Erro HTTP: ${response.status} - ${fallbackResponse.statusText}`);
+                    }
+
+                    const fallbackData = await fallbackResponse.json();
+                    processOrdersData(fallbackData);
+                    return;
+                }
 
                 const data = await response.json();
-                let rawOrders = [];
+                processOrdersData(data);
 
-                if (Array.isArray(data)) rawOrders = data;
-                else if (data.pedidos) rawOrders = data.pedidos;
-                else if (data.orders) rawOrders = data.orders;
-
-                orders = rawOrders.map(pedido => ({
-                    id: pedido.id || Math.random().toString(36).substr(2, 9),
-                    status: mapearStatus(pedido.status),
-                    timestamp: pedido.timestamp || pedido.data || pedido.created_at || new Date().toISOString(),
-                    created_at: pedido.created_at || pedido.data || new Date().toISOString(),
-                    customer: {
-                        name: pedido.customer?.name || pedido.cliente || pedido.nome_cliente || 'Cliente não informado',
-                        phone: pedido.customer?.phone || pedido.telefone || pedido.phone || 'Não informado',
-                        address: pedido.customer?.address || pedido.endereco || pedido.address || 'Não informado',
-                        neighborhood: pedido.customer?.neighborhood || pedido.bairro || pedido.neighborhood || 'Não informado',
-                        complement: pedido.customer?.complement || pedido.complemento || pedido.complement || '',
-                        paymentMethod: pedido.customer?.paymentMethod || pedido.forma_pagamento || pedido.payment_method || 'Não informado'
-                    },
-                    items: processarItens(pedido.items || pedido.itens || []),
-                    total: Number(pedido.total || 0)
-                }));
-
-                renderOrders();
-                updateStats();
-                updateLastUpdateTime();
-
-                if (!silent) showToast('Pedidos atualizados!', 'success');
             } catch (error) {
-                console.error('Erro ao carregar pedidos:', error);
-                if (!silent) showToast('Erro ao carregar pedidos: ' + error.message, 'danger');
+                console.error('❌ Erro ao carregar pedidos:', error);
+                if (!silent) {
+                    showToast('Erro ao carregar pedidos: ' + error.message, 'danger');
+                }
+
+                // Em caso de erro, garantir que a interface não quebre
                 orders = [];
                 renderOrders();
             }
         }
 
+        function processOrdersData(data) {
+            console.log('📦 Dados brutos recebidos:', data);
+
+            let rawOrders = [];
+
+            // ✅ COMPATIBILIDADE COM AMBOS OS FORMATOS (novo e antigo)
+            if (Array.isArray(data)) {
+                rawOrders = data;
+            } else if (data.orders && Array.isArray(data.orders)) {
+                rawOrders = data.orders;
+            } else if (data.pedidos && Array.isArray(data.pedidos)) {
+                rawOrders = data.pedidos;
+            } else {
+                console.error('❌ Estrutura de dados inesperada:', data);
+                rawOrders = [];
+            }
+
+            // Processar pedidos
+            orders = rawOrders.map(pedido => {
+                try {
+                    // ✅ COMPATIBILIDADE: Verificar se é o formato novo ou antigo
+                    const isNewFormat = pedido.customer !== undefined;
+
+                    return {
+                        id: pedido.id || Math.random().toString(36).substr(2, 9),
+                        status: mapearStatus(pedido.status),
+                        timestamp: pedido.created_at || pedido.data_pedido || new Date().toISOString(),
+                        created_at: pedido.created_at || pedido.data_pedido || new Date().toISOString(),
+                        customer: {
+                            name: isNewFormat ?
+                                (pedido.customer.name || 'Cliente não informado') :
+                                (pedido.cliente || 'Cliente não informado'),
+                            phone: isNewFormat ?
+                                (pedido.customer.phone || 'Não informado') :
+                                (pedido.telefone || 'Não informado'),
+                            address: isNewFormat ?
+                                (pedido.customer.address || 'Não informado') :
+                                (pedido.endereco || 'Não informado'),
+                            neighborhood: isNewFormat ?
+                                (pedido.customer.neighborhood || 'Não informado') :
+                                (pedido.bairro || 'Não informado'),
+                            complement: isNewFormat ?
+                                (pedido.customer.complement || '') :
+                                (pedido.complemento || ''),
+                            paymentMethod: isNewFormat ?
+                                (pedido.customer.paymentMethod || 'PIX') :
+                                (pedido.forma_pagamento || 'PIX')
+                        },
+                        items: processarItens(pedido.items || pedido.itens || []),
+                        total: Number(pedido.total || 0)
+                    };
+                } catch (error) {
+                    console.error('❌ Erro ao processar pedido:', error, pedido);
+                    return null;
+                }
+            }).filter(order => order !== null);
+
+            console.log('✅ Pedidos processados:', orders.length);
+            if (orders.length > 0) {
+                console.log('📋 Exemplo de pedido processado:', orders[0]);
+            }
+
+            renderOrders();
+            updateStats();
+            updateLastUpdateTime();
+
+            if (!silent) {
+                showToast('Pedidos atualizados!', 'success');
+            }
+        }
+
         function mapearStatus(status) {
             if (!status) return 'pending';
-            const map = {
+
+            const statusMap = {
                 'pendente': 'pending',
                 'confirmado': 'accepted',
                 'aceito': 'accepted',
@@ -1416,12 +1568,16 @@
                 'concluído': 'completed',
                 'cancelado': 'cancelled'
             };
-            return map[status.toLowerCase()] || status.toLowerCase();
+
+            const statusLower = status.toLowerCase();
+            return statusMap[statusLower] || status.toLowerCase();
         }
 
         function processarItens(itens) {
+            if (!Array.isArray(itens)) return [];
+
             return itens.map(item => ({
-                name: item.name || item.nome || 'Item',
+                name: item.name || item.nome || item.produto || 'Item',
                 description: item.description || item.descricao || '',
                 quantity: Number(item.quantity || item.quantidade || 1),
                 price: Number(item.price || item.preco || item.valor || 0)
@@ -1430,26 +1586,47 @@
 
         async function updateOrderStatus(orderId, newStatus) {
             try {
-                const response = await fetch(`${API_BASE_URL}/api/pedidos/${orderId}`, {
+                // ✅ USAR O NOVO ENDPOINT /api/orders/{id}
+                const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
                     body: JSON.stringify({ status: newStatus })
                 });
 
-                if (!response.ok) throw new Error('Erro ao atualizar status');
+                if (!response.ok) {
+                    // Fallback para endpoint antigo
+                    console.log('⚠️ Tentando endpoint antigo...');
+                    const fallbackResponse = await fetch(`${API_BASE_URL}/api/pedidos/${orderId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ status: newStatus })
+                    });
+
+                    if (!fallbackResponse.ok) {
+                        throw new Error('Erro ao atualizar status do pedido');
+                    }
+                }
 
                 await sendStatusUpdateToN8N(orderId, newStatus);
 
                 const orderIndex = orders.findIndex(order => order.id === orderId);
-                if (orderIndex !== -1) orders[orderIndex].status = newStatus;
+                if (orderIndex !== -1) {
+                    orders[orderIndex].status = newStatus;
+                }
 
                 renderOrders();
                 updateStats();
                 closeOrderDetails();
 
-                showToast(`Pedido ${getStatusText(newStatus).toLowerCase()}!`, 'success');
+                const statusText = getStatusText(newStatus);
+                showToast(`Pedido ${statusText.toLowerCase()}!`, 'success');
+
             } catch (error) {
-                console.error('Erro ao atualizar status:', error);
+                console.error('❌ Erro ao atualizar status:', error);
                 showToast('Erro ao atualizar status do pedido', 'danger');
             }
         }
@@ -1461,72 +1638,108 @@
 
                 const response = await fetch(N8N_STATUS_WEBHOOK_URL, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ orderId, status: newStatus, customer: order.customer, items: order.items, total: order.total })
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        orderId: orderId,
+                        status: newStatus,
+                        customer: order.customer,
+                        items: order.items,
+                        total: order.total
+                    })
                 });
 
-                if (!response.ok) throw new Error('Erro ao enviar status para n8n');
+                if (!response.ok) {
+                    throw new Error('Erro ao enviar status para n8n');
+                }
+
+                console.log('✅ Status enviado para n8n com sucesso');
             } catch (error) {
-                console.error('Erro ao enviar notificação para n8n:', error);
+                console.error('❌ Erro ao enviar notificação para n8n:', error);
             }
         }
 
-        // ================= INTERFACE =================
         function renderOrders() {
-            const container = document.getElementById('orders-container');
+            const ordersContainer = document.getElementById('orders-container');
             const noOrders = document.getElementById('no-orders');
-            container.innerHTML = '';
 
-            let filtered = filterOrders();
-            if (filtered.length === 0) {
+            ordersContainer.innerHTML = '';
+
+            let filteredOrders = filterOrders();
+
+            if (filteredOrders.length === 0) {
                 noOrders.style.display = 'block';
-                container.style.display = 'none';
+                ordersContainer.style.display = 'none';
                 return;
             }
 
             noOrders.style.display = 'none';
-            container.style.display = 'grid';
-            filtered.forEach(order => container.appendChild(createOrderCard(order)));
+            ordersContainer.style.display = 'grid';
+
+            filteredOrders.forEach(order => {
+                const orderCard = createOrderCard(order);
+                ordersContainer.appendChild(orderCard);
+            });
         }
 
         function filterOrders() {
-            let filtered = [...orders];
-            if (currentFilter !== 'all') filtered = filtered.filter(o => o.status === currentFilter);
+            let filtered = Array.isArray(orders) ? [...orders] : [];
+
+            if (currentFilter !== 'all') {
+                filtered = filtered.filter(order => order.status === currentFilter);
+            }
+
             if (currentSearchTerm) {
                 filtered = filtered.filter(order =>
                     order.id.toLowerCase().includes(currentSearchTerm) ||
-                    order.customer.name.toLowerCase().includes(currentSearchTerm) ||
-                    order.customer.phone.includes(currentSearchTerm)
+                    (order.customer && order.customer.name && order.customer.name.toLowerCase().includes(currentSearchTerm)) ||
+                    (order.customer && order.customer.phone && order.customer.phone.includes(currentSearchTerm))
                 );
             }
+
             return filtered;
         }
 
         function createOrderCard(order) {
-            const card = document.createElement('div');
-            card.className = `order-card ${order.status}`;
-            card.onclick = () => showOrderDetails(order);
-            card.innerHTML = `
+            const orderCard = document.createElement('div');
+            orderCard.className = `order-card ${order.status}`;
+            orderCard.onclick = () => showOrderDetails(order);
+
+            const dataFormatada = formatDate(order.timestamp);
+
+            orderCard.innerHTML = `
             <div class="order-card-body">
                 <div class="order-header">
                     <div class="flex-grow-1">
                         <div class="order-id">Pedido #${String(order.id).substr(-6)}</div>
-                        <div class="order-time">${formatDate(order.timestamp)}</div>
+                        <div class="order-time">${dataFormatada}</div>
                     </div>
                     <span class="status-badge status-${order.status}">
                         ${getStatusText(order.status)}
                     </span>
                 </div>
+                
                 <div class="customer-info">
-                    <div class="customer-name"><i class="fas fa-user me-2 text-muted"></i>${order.customer.name}</div>
-                    <div class="customer-phone"><i class="fas fa-phone me-2 text-muted"></i>${order.customer.phone}</div>
+                    <div class="customer-name">
+                        <i class="fas fa-user me-2 text-muted"></i>${order.customer.name}
+                    </div>
+                    <div class="customer-phone">
+                        <i class="fas fa-phone me-2 text-muted"></i>${order.customer.phone}
+                    </div>
                 </div>
+                
                 <div class="order-summary">
-                    <span class="items-count"><i class="fas fa-shopping-bag me-1 text-muted"></i>${order.items.length} ${order.items.length === 1 ? 'item' : 'itens'}</span>
+                    <span class="items-count">
+                        <i class="fas fa-shopping-bag me-1 text-muted"></i>
+                        ${order.items.length} ${order.items.length === 1 ? 'item' : 'itens'}
+                    </span>
                     <span class="order-total">R$ ${order.total.toFixed(2)}</span>
                 </div>
-            </div>`;
-            return card;
+            </div>
+        `;
+
+            return orderCard;
         }
 
         function showOrderDetails(order) {
@@ -1540,23 +1753,25 @@
             document.getElementById('detail-total').textContent = `R$ ${order.total.toFixed(2)}`;
             document.getElementById('detail-date').textContent = formatDate(order.timestamp);
 
-            const badge = document.getElementById('detail-status');
-            badge.textContent = getStatusText(order.status);
-            badge.className = `status-badge status-${order.status}`;
+            const statusBadge = document.getElementById('detail-status');
+            statusBadge.textContent = getStatusText(order.status);
+            statusBadge.className = `status-badge status-${order.status}`;
 
             const itemsContainer = document.getElementById('detail-items');
             itemsContainer.innerHTML = '';
+
             order.items.forEach(item => {
-                const row = document.createElement('div');
-                row.className = 'item-row';
-                row.innerHTML = `
+                const itemRow = document.createElement('div');
+                itemRow.className = 'item-row';
+                itemRow.innerHTML = `
                 <div class="item-info">
                     <div class="item-name">${item.name}</div>
                     <div class="item-description">${item.description || ''}</div>
                 </div>
                 <div class="item-quantity">${item.quantity}x</div>
-                <div class="item-price">R$ ${(item.price * item.quantity).toFixed(2)}</div>`;
-                itemsContainer.appendChild(row);
+                <div class="item-price">R$ ${(item.price * item.quantity).toFixed(2)}</div>
+            `;
+                itemsContainer.appendChild(itemRow);
             });
 
             setupActionButtons(order);
@@ -1564,27 +1779,27 @@
         }
 
         function setupActionButtons(order) {
-            const container = document.getElementById('detail-actions');
-            container.innerHTML = '';
+            const actionsContainer = document.getElementById('detail-actions');
+            actionsContainer.innerHTML = '';
 
             const closeBtn = document.createElement('button');
             closeBtn.className = 'btn-action btn-close';
             closeBtn.innerHTML = '<i class="fas fa-times me-1"></i>Fechar';
             closeBtn.onclick = closeOrderDetails;
-            container.appendChild(closeBtn);
+            actionsContainer.appendChild(closeBtn);
 
             if (order.status === 'pending') {
                 const acceptBtn = document.createElement('button');
                 acceptBtn.className = 'btn-action btn-accept';
                 acceptBtn.innerHTML = '<i class="fas fa-check me-1"></i>Aceitar Pedido';
                 acceptBtn.onclick = () => updateOrderStatus(order.id, 'accepted');
-                container.appendChild(acceptBtn);
+                actionsContainer.appendChild(acceptBtn);
             } else if (order.status === 'accepted') {
                 const deliveryBtn = document.createElement('button');
                 deliveryBtn.className = 'btn-action btn-delivery';
                 deliveryBtn.innerHTML = '<i class="fas fa-truck me-1"></i>Enviar para Entrega';
                 deliveryBtn.onclick = () => updateOrderStatus(order.id, 'delivery');
-                container.appendChild(deliveryBtn);
+                actionsContainer.appendChild(deliveryBtn);
             }
         }
 
@@ -1592,16 +1807,23 @@
             document.getElementById('order-details').style.display = 'none';
         }
 
-        // ================= ESTATÍSTICAS & RELATÓRIOS =================
         function updateStats() {
-            const stats = { pending: 0, accepted: 0, delivery: 0, total: 0 };
+            const stats = {
+                pending: 0,
+                accepted: 0,
+                delivery: 0,
+                total: 0
+            };
+
             const today = new Date().toDateString();
 
             orders.forEach(order => {
-                const orderDate = parseOrderDate(order.created_at);
-                if (orderDate && orderDate.toDateString() === today) {
+                const orderDate = new Date(order.created_at).toDateString();
+
+                if (orderDate === today) {
                     stats.total += order.total;
                 }
+
                 stats[order.status] = (stats[order.status] || 0) + 1;
             });
 
@@ -1609,99 +1831,170 @@
             document.getElementById('stat-accepted').textContent = stats.accepted;
             document.getElementById('stat-delivery').textContent = stats.delivery;
             document.getElementById('stat-total').textContent = `R$ ${stats.total.toFixed(2)}`;
+
             document.getElementById('pending-count').textContent = stats.pending;
             document.getElementById('pending-count').style.display = stats.pending > 0 ? 'flex' : 'none';
         }
 
         function generateReport() {
             showToast('Relatório gerado com sucesso!', 'success');
+
             document.getElementById('report-total-orders').textContent = orders.length;
-            const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+
+            const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
             document.getElementById('report-total-revenue').textContent = `R$ ${totalRevenue.toFixed(2)}`;
-            document.getElementById('report-avg-order').textContent = `R$ ${(orders.length ? totalRevenue / orders.length : 0).toFixed(2)}`;
-            document.getElementById('report-total-items').textContent = orders.reduce((sum, o) => sum + o.items.reduce((s, i) => s + i.quantity, 0), 0);
+
+            const avgOrder = orders.length > 0 ? totalRevenue / orders.length : 0;
+            document.getElementById('report-avg-order').textContent = `R$ ${avgOrder.toFixed(2)}`;
+
+            const totalItems = orders.reduce((sum, order) => {
+                return sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0);
+            }, 0);
+            document.getElementById('report-total-items').textContent = totalItems;
+
             updateCharts();
         }
 
         function setupCharts() {
             window.salesChart = new Chart(document.getElementById('sales-chart'), {
                 type: 'line',
-                data: { labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'], datasets: [{ label: 'Vendas (R$)', data: [0, 0, 0, 0, 0, 0, 0], borderColor: '#4f46e5', backgroundColor: 'rgba(79, 70, 229, 0.1)', tension: 0.3, fill: true }] },
-                options: { responsive: true, maintainAspectRatio: false }
+                data: {
+                    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Vendas (R$)',
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
             });
+
             window.productsChart = new Chart(document.getElementById('products-chart'), {
                 type: 'bar',
-                data: { labels: ['Produto 1', 'Produto 2', 'Produto 3', 'Produto 4', 'Produto 5'], datasets: [{ label: 'Vendas', data: [0, 0, 0, 0, 0], backgroundColor: '#ff6b35' }] },
-                options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y' }
+                data: {
+                    labels: ['Produto 1', 'Produto 2', 'Produto 3', 'Produto 4', 'Produto 5'],
+                    datasets: [{
+                        label: 'Vendas',
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: '#ff6b35'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y'
+                }
             });
+
             window.hoursChart = new Chart(document.getElementById('hours-chart'), {
                 type: 'bar',
-                data: { labels: ['12h', '13h', '14h', '15h', '16h', '17h', '18h', '19h', '20h', '21h'], datasets: [{ label: 'Pedidos', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], backgroundColor: '#10b981' }] },
-                options: { responsive: true, maintainAspectRatio: false }
+                data: {
+                    labels: ['12h', '13h', '14h', '15h', '16h', '17h', '18h', '19h', '20h', '21h'],
+                    datasets: [{
+                        label: 'Pedidos',
+                        data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
             });
         }
 
         function updateCharts() {
-            window.salesChart.data.datasets[0].data = [120, 190, 300, 500, 200, 300, 450];
+            const salesData = [120, 190, 300, 500, 200, 300, 450];
+            const productsData = [65, 59, 80, 45, 56];
+            const hoursData = [12, 19, 8, 15, 10, 22, 18, 14, 9, 7];
+
+            window.salesChart.data.datasets[0].data = salesData;
             window.salesChart.update();
-            window.productsChart.data.datasets[0].data = [65, 59, 80, 45, 56];
+
+            window.productsChart.data.datasets[0].data = productsData;
             window.productsChart.update();
-            window.hoursChart.data.datasets[0].data = [12, 19, 8, 15, 10, 22, 18, 14, 9, 7];
+
+            window.hoursChart.data.datasets[0].data = hoursData;
             window.hoursChart.update();
-        }
-
-        // ================= UTILIDADES =================
-        function getStatusText(status) {
-            const map = { 'pending': 'Pendente', 'accepted': 'Aceito', 'delivery': 'Em Entrega', 'completed': 'Concluído' };
-            return map[status] || status;
-        }
-
-        function updateLastUpdateTime() {
-            document.getElementById('last-update').textContent = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
-            toast.className = `toast align-items-center text-white bg-${type === 'danger' ? 'danger' : type} border-0`;
-            toast.setAttribute('role', 'alert');
-            toast.innerHTML = `<div class="d-flex"><div class="toast-body"><i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'danger' ? 'fa-exclamation-circle' : 'fa-info-circle'} me-2"></i>${message}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
-            container.appendChild(toast);
-            new bootstrap.Toast(toast, { delay: 3000 }).show();
-            toast.addEventListener('hidden.bs.toast', () => toast.remove());
-        }
-
-        function handleFilterChange(event) {
-            document.querySelectorAll('.filter-option').forEach(opt => opt.classList.remove('active'));
-            event.target.classList.add('active');
-            currentFilter = event.target.getAttribute('data-filter');
-            renderOrders();
-        }
-
-        function handleSearch(event) {
-            currentSearchTerm = event.target.value.toLowerCase();
-            renderOrders();
-        }
-
-        function handleRefresh() {
-            loadOrders();
-            showToast('Pedidos atualizados manualmente', 'info');
-        }
-
-        function switchSection(section) {
-            currentSection = section;
-            document.querySelectorAll('.main-section').forEach(el => el.classList.remove('active'));
-            document.getElementById(`section-${section}`).classList.add('active');
-        }
-
-        function startAutoUpdate() {
-            if (updateInterval) clearInterval(updateInterval);
-            updateInterval = setInterval(() => loadOrders(true), 30000);
         }
 
         function saveSettings() {
             showToast('Configurações salvas com sucesso!', 'success');
         }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': 'Pendente',
+                'accepted': 'Aceito',
+                'delivery': 'Em Entrega',
+                'completed': 'Concluído'
+            };
+            return statusMap[status] || status;
+        }
+
+        function updateLastUpdateTime() {
+            const now = new Date();
+            document.getElementById('last-update').textContent = now.toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function showToast(message, type = 'info') {
+            const toastContainer = document.getElementById('toast-container');
+            const toastId = 'toast-' + Date.now();
+
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-white bg-${type === 'danger' ? 'danger' : type} border-0`;
+            toast.setAttribute('role', 'alert');
+            toast.setAttribute('aria-live', 'assertive');
+            toast.setAttribute('aria-atomic', 'true');
+            toast.id = toastId;
+
+            toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                    ${message}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+
+            toastContainer.appendChild(toast);
+
+            const bsToast = new bootstrap.Toast(toast, {
+                autohide: true,
+                delay: 4000
+            });
+
+            bsToast.show();
+
+            toast.addEventListener('hidden.bs.toast', function () {
+                toast.remove();
+            });
+        }
+
+        function logout() {
+            if (confirm('Tem certeza que deseja sair?')) {
+                localStorage.clear();
+                sessionStorage.clear();
+                window.location.reload();
+            }
+        }
+
+        window.addEventListener('beforeunload', function () {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+        });
     </script>
 
 </body>
