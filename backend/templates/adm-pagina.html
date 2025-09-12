@@ -1783,25 +1783,37 @@
             const actionsContainer = document.getElementById('detail-actions');
             actionsContainer.innerHTML = '';
 
+            // Criar um container interno para os botões de ação
+            const actionButtonsDiv = document.createElement('div');
+            actionButtonsDiv.style.display = 'flex';
+            actionButtonsDiv.style.gap = '10px';
+            actionButtonsDiv.style.flexWrap = 'wrap';
+            actionButtonsDiv.style.justifyContent = 'flex-end';
+
+            // Adicionar botão de fechar primeiro
             const closeBtn = document.createElement('button');
             closeBtn.className = 'btn-action btn-close';
             closeBtn.innerHTML = '<i class="fas fa-times me-1"></i>Fechar';
             closeBtn.onclick = closeOrderDetails;
-            actionsContainer.appendChild(closeBtn);
+            actionButtonsDiv.appendChild(closeBtn);
 
+            // Adicionar botões específicos de acordo com o status
             if (order.status === 'pending') {
                 const acceptBtn = document.createElement('button');
                 acceptBtn.className = 'btn-action btn-accept';
                 acceptBtn.innerHTML = '<i class="fas fa-check me-1"></i>Aceitar Pedido';
                 acceptBtn.onclick = () => updateOrderStatus(order.id, 'accepted');
-                actionsContainer.appendChild(acceptBtn);
+                actionButtonsDiv.appendChild(acceptBtn);
             } else if (order.status === 'accepted') {
                 const deliveryBtn = document.createElement('button');
                 deliveryBtn.className = 'btn-action btn-delivery';
                 deliveryBtn.innerHTML = '<i class="fas fa-truck me-1"></i>Enviar para Entrega';
                 deliveryBtn.onclick = () => updateOrderStatus(order.id, 'delivery');
-                actionsContainer.appendChild(deliveryBtn);
+                actionButtonsDiv.appendChild(deliveryBtn);
             }
+
+            // Adicionar o container de botões ao container principal
+            actionsContainer.appendChild(actionButtonsDiv);
         }
 
         function closeOrderDetails() {
