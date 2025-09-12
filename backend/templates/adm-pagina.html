@@ -1464,12 +1464,12 @@
                     }
 
                     const fallbackData = await fallbackResponse.json();
-                    processOrdersData(fallbackData);
+                    processOrdersData(fallbackData, silent); // ✅ PASSAR silent AQUI
                     return;
                 }
 
                 const data = await response.json();
-                processOrdersData(data);
+                processOrdersData(data, silent); // ✅ PASSAR silent AQUI
 
             } catch (error) {
                 console.error('❌ Erro ao carregar pedidos:', error);
@@ -1483,7 +1483,7 @@
             }
         }
 
-        function processOrdersData(data) {
+        function processOrdersData(data, silent = false) {
             console.log('📦 Dados brutos recebidos:', data);
 
             let rawOrders = [];
@@ -1549,6 +1549,7 @@
             updateStats();
             updateLastUpdateTime();
 
+            // ✅ USAR O PARÂMETRO SILENT AQUI
             if (!silent) {
                 showToast('Pedidos atualizados!', 'success');
             }
