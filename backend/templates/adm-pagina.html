@@ -486,6 +486,29 @@
             border-radius: 16px 16px 0 0;
         }
 
+        /* ✅ MELHORAR O BOTÃO X NO HEADER */
+        .btn-close-header {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--gray-500);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .btn-close-header:hover {
+            background: var(--gray-100);
+            color: var(--gray-700);
+            transform: scale(1.1);
+        }
+
         .order-details-body {
             padding: 1.5rem;
         }
@@ -614,13 +637,18 @@
             box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
         }
 
+        /* ✅ MELHORAR O BOTÃO FECHAR NA ÁREA DE AÇÕES */
         .btn-close {
-            background: var(--gray-200);
-            color: var(--gray-700);
+            background: var(--gray-500);
+            color: white;
+            border: 2px solid var(--gray-500);
         }
 
         .btn-close:hover {
-            background: var(--gray-300);
+            background: var(--gray-600);
+            border-color: var(--gray-600);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
         }
 
         /* Toast Notifications */
@@ -636,6 +664,28 @@
             border: none;
             box-shadow: var(--shadow-lg);
             margin-bottom: 0.875rem;
+        }
+
+        /* ✅ ADICIONAR BOTÃO X NAS NOTIFICAÇÕES TOAST */
+        .toast-close-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .toast-close-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
         }
 
         /* No Orders State */
@@ -1186,7 +1236,10 @@
                     <i class="fas fa-receipt me-2 text-primary"></i>
                     Detalhes do Pedido: <span id="detail-order-id"></span>
                 </h5>
-                <button type="button" class="btn-close" id="close-details"></button>
+                <!-- ✅ BOTÃO X ADICIONADO NO HEADER -->
+                <button type="button" class="btn-close-header" id="close-details-header">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
 
             <div class="order-details-body">
@@ -1346,7 +1399,14 @@
         }
 
         function setupEventListeners() {
-            document.getElementById('close-details').addEventListener('click', closeOrderDetails);
+            // ✅ ADICIONAR EVENTOS PARA AMBOS OS BOTÕES DE FECHAR
+            document.getElementById('close-details-header').addEventListener('click', closeOrderDetails);
+            
+            // Manter o evento original também
+            const originalCloseBtn = document.getElementById('close-details');
+            if (originalCloseBtn) {
+                originalCloseBtn.addEventListener('click', closeOrderDetails);
+            }
 
             document.querySelectorAll('.filter-option').forEach(option => {
                 option.addEventListener('click', handleFilterChange);
@@ -1783,14 +1843,14 @@
             const actionsContainer = document.getElementById('detail-actions');
             actionsContainer.innerHTML = '';
 
-            // Criar um container interno para os botões de ação
+            // ✅ MELHORAR A CRIAÇÃO DOS BOTÕES DE AÇÃO
             const actionButtonsDiv = document.createElement('div');
             actionButtonsDiv.style.display = 'flex';
             actionButtonsDiv.style.gap = '10px';
             actionButtonsDiv.style.flexWrap = 'wrap';
             actionButtonsDiv.style.justifyContent = 'flex-end';
 
-            // Adicionar botão de fechar primeiro
+            // Botão de fechar melhorado
             const closeBtn = document.createElement('button');
             closeBtn.className = 'btn-action btn-close';
             closeBtn.innerHTML = '<i class="fas fa-times me-1"></i>Fechar';
@@ -1812,7 +1872,6 @@
                 actionButtonsDiv.appendChild(deliveryBtn);
             }
 
-            // Adicionar o container de botões ao container principal
             actionsContainer.appendChild(actionButtonsDiv);
         }
 
@@ -1960,6 +2019,7 @@
             });
         }
 
+        // ✅ MELHORAR A FUNÇÃO showToast COM BOTÃO X
         function showToast(message, type = 'info') {
             const toastContainer = document.getElementById('toast-container');
             const toastId = 'toast-' + Date.now();
@@ -1977,7 +2037,9 @@
                     <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
                     ${message}
                 </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                <button type="button" class="toast-close-btn" onclick="this.closest('.toast').remove()">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
         `;
 
