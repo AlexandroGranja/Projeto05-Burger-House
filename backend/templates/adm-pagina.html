@@ -596,7 +596,7 @@
             display: flex;
             gap: 0.875rem;
             justify-content: flex-end;
-            padding: 1.25rem 1.5rem;
+            padding: 1.5rem 1.5rem;
             border-top: 1px solid var(--gray-200);
             background: var(--gray-50);
             position: sticky;
@@ -604,17 +604,31 @@
             border-radius: 0 0 16px 16px;
         }
 
+        .action-buttons-container {
+            display: flex !important;
+            gap: 12px !important;
+            justify-content: flex-end !important;
+            align-items: center !important;
+            width: 100% !important;
+            flex-wrap: wrap !important;
+        }
+
         .btn-action {
-            padding: 0.625rem 1.25rem;
-            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
             font-weight: 600;
             border: none;
             cursor: pointer;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 0.5rem;
             font-size: 0.875rem;
+            min-height: 44px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
         }
 
         .btn-accept {
@@ -639,16 +653,24 @@
 
         /* ✅ MELHORAR O BOTÃO FECHAR NA ÁREA DE AÇÕES */
         .btn-close {
-            background: var(--gray-500);
+            background: linear-gradient(135deg, var(--gray-700) 0%, var(--gray-800) 100%);
             color: white;
-            border: 2px solid var(--gray-500);
+            border: 2px solid var(--gray-700);
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(55, 65, 81, 0.3);
         }
 
         .btn-close:hover {
-            background: var(--gray-600);
-            border-color: var(--gray-600);
+            background: linear-gradient(135deg, var(--gray-800) 0%, var(--gray-900) 100%);
+            border-color: var(--gray-800);
+            color: white;
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
+            box-shadow: 0 6px 16px rgba(55, 65, 81, 0.4);
+        }
+
+        .btn-close:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(55, 65, 81, 0.3);
         }
 
         /* Toast Notifications */
@@ -1843,34 +1865,43 @@
             const actionsContainer = document.getElementById('detail-actions');
             actionsContainer.innerHTML = '';
 
-            // ✅ MELHORAR A CRIAÇÃO DOS BOTÕES DE AÇÃO
+            // ✅ CRIAR CONTAINER PARA OS BOTÕES COM ORDEM CORRETA
             const actionButtonsDiv = document.createElement('div');
+            actionButtonsDiv.className = 'action-buttons-container';
             actionButtonsDiv.style.display = 'flex';
-            actionButtonsDiv.style.gap = '10px';
+            actionButtonsDiv.style.gap = '12px';
             actionButtonsDiv.style.flexWrap = 'wrap';
             actionButtonsDiv.style.justifyContent = 'flex-end';
+            actionButtonsDiv.style.alignItems = 'center';
+            actionButtonsDiv.style.width = '100%';
 
-            // Botão de fechar melhorado
-            const closeBtn = document.createElement('button');
-            closeBtn.className = 'btn-action btn-close';
-            closeBtn.innerHTML = '<i class="fas fa-times me-1"></i>Fechar';
-            closeBtn.onclick = closeOrderDetails;
-            actionButtonsDiv.appendChild(closeBtn);
-
-            // Adicionar botões específicos de acordo com o status
+            // ✅ PRIMEIRO: Adicionar botões específicos de acordo com o status
             if (order.status === 'pending') {
                 const acceptBtn = document.createElement('button');
                 acceptBtn.className = 'btn-action btn-accept';
-                acceptBtn.innerHTML = '<i class="fas fa-check me-1"></i>Aceitar Pedido';
+                acceptBtn.innerHTML = '<i class="fas fa-check me-2"></i>Aceitar Pedido';
+                acceptBtn.style.minWidth = '150px';
+                acceptBtn.style.fontSize = '0.9rem';
                 acceptBtn.onclick = () => updateOrderStatus(order.id, 'accepted');
                 actionButtonsDiv.appendChild(acceptBtn);
             } else if (order.status === 'accepted') {
                 const deliveryBtn = document.createElement('button');
                 deliveryBtn.className = 'btn-action btn-delivery';
-                deliveryBtn.innerHTML = '<i class="fas fa-truck me-1"></i>Enviar para Entrega';
+                deliveryBtn.innerHTML = '<i class="fas fa-truck me-2"></i>Enviar para Entrega';
+                deliveryBtn.style.minWidth = '170px';
+                deliveryBtn.style.fontSize = '0.9rem';
                 deliveryBtn.onclick = () => updateOrderStatus(order.id, 'delivery');
                 actionButtonsDiv.appendChild(deliveryBtn);
             }
+
+            // ✅ SEGUNDO: Botão de fechar sempre por último (lado direito)
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'btn-action btn-close';
+            closeBtn.innerHTML = '<i class="fas fa-times me-2"></i>Fechar';
+            closeBtn.style.minWidth = '120px';
+            closeBtn.style.fontSize = '0.9rem';
+            closeBtn.onclick = closeOrderDetails;
+            actionButtonsDiv.appendChild(closeBtn);
 
             actionsContainer.appendChild(actionButtonsDiv);
         }
