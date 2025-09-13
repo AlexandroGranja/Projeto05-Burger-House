@@ -2202,54 +2202,7 @@
             }
         }
 
-
-        //<script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const darkThemeSwitch = document.getElementById("dark-theme");
-            const htmlElement = document.documentElement;
-
-            // Função para aplicar o tema
-            function applyTheme(theme) {
-                if (theme === "dark") {
-                    htmlElement.setAttribute("data-theme", "dark");
-                    if (darkThemeSwitch) {
-                        darkThemeSwitch.checked = true;
-                    }
-                } else {
-                    htmlElement.removeAttribute("data-theme");
-                    if (darkThemeSwitch) {
-                        darkThemeSwitch.checked = false;
-                    }
-                }
-                localStorage.setItem("theme", theme);
-            }
-
-            // Carregar a preferência do usuário ao carregar a página
-            const savedTheme = localStorage.getItem("theme");
-            const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-
-            if (savedTheme) {
-                applyTheme(savedTheme);
-            } else if (prefersDark) {
-                applyTheme("dark");
-            } else {
-                applyTheme("light");
-            }
-
-            // Adicionar um ouvinte de evento ao switch do tema escuro
-            if (darkThemeSwitch) {
-                darkThemeSwitch.addEventListener("change", () => {
-                    if (darkThemeSwitch.checked) {
-                        applyTheme("dark");
-                    } else {
-                        applyTheme("light");
-                    }
-                });
-            }
-        });
-        //</script>
-
-        window.addEventListener("beforeunload", function () {
+        window.addEventListener('beforeunload', function () {
             if (updateInterval) {
                 clearInterval(updateInterval);
             }
