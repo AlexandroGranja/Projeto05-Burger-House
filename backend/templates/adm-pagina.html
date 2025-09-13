@@ -688,26 +688,57 @@
             margin-bottom: 0.875rem;
         }
 
-        /* ✅ ADICIONAR BOTÃO X NAS NOTIFICAÇÕES TOAST */
+        /* ✅ MELHORAR BOTÃO X NAS NOTIFICAÇÕES TOAST */
         .toast-close-btn {
-            background: none;
-            border: none;
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 1.2rem;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            padding: 0.25rem;
-            border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            padding: 0.35rem;
+            border-radius: 6px;
+            width: 32px;
+            height: 32px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
+            margin-left: auto;
+            flex-shrink: 0;
         }
 
         .toast-close-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
             color: white;
+            transform: scale(1.05);
+        }
+
+        .toast-close-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* Toast styling improvements */
+        .toast {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            margin-bottom: 0.875rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .toast .d-flex {
+            align-items: center;
+            padding: 0.125rem;
+        }
+
+        .toast-body {
+            padding: 1rem 1.25rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            flex: 1;
         }
 
         /* No Orders State */
@@ -2050,7 +2081,7 @@
             });
         }
 
-        // ✅ MELHORAR A FUNÇÃO showToast COM BOTÃO X
+        // ✅ MELHORAR A FUNÇÃO showToast COM BOTÃO X OTIMIZADO
         function showToast(message, type = 'info') {
             const toastContainer = document.getElementById('toast-container');
             const toastId = 'toast-' + Date.now();
@@ -2062,30 +2093,55 @@
             toast.setAttribute('aria-atomic', 'true');
             toast.id = toastId;
 
+            // Criar estrutura melhorada do toast
             toast.innerHTML = `
-            <div class="d-flex">
-                <div class="toast-body">
-                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
-                    ${message}
+                <div class="d-flex align-items-center w-100">
+                    <div class="toast-body">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-triangle' : 'info-circle'} me-2"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="toast-close-btn me-2" onclick="closeToast('${toastId}')" title="Fechar notificação">
+                        <i class="fas fa-times"></i>
+                    </button>
                 </div>
-                <button type="button" class="toast-close-btn" onclick="this.closest('.toast').remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-        `;
+            `;
 
             toastContainer.appendChild(toast);
 
+            // Inicializar Bootstrap Toast
             const bsToast = new bootstrap.Toast(toast, {
                 autohide: true,
-                delay: 4000
+                delay: 5000
             });
 
             bsToast.show();
 
+            // Remover automaticamente após esconder
             toast.addEventListener('hidden.bs.toast', function () {
-                toast.remove();
+                if (toast && toast.parentNode) {
+                    toast.remove();
+                }
             });
+
+            // Auto-remove após delay mais longo como fallback
+            setTimeout(() => {
+                if (toast && toast.parentNode) {
+                    toast.remove();
+                }
+            }, 6000);
+        }
+
+        // ✅ FUNÇÃO PARA FECHAR TOAST MANUALMENTE
+        function closeToast(toastId) {
+            const toast = document.getElementById(toastId);
+            if (toast) {
+                const bsToast = bootstrap.Toast.getInstance(toast);
+                if (bsToast) {
+                    bsToast.hide();
+                } else {
+                    toast.remove();
+                }
+            }
         }
 
         function logout() {
