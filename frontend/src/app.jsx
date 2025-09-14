@@ -29,7 +29,11 @@ function App() {
   const [selectedItemWithOptions, setSelectedItemWithOptions] = useState(null);
 
   const addToCart = (item, variant = null) => {
-    const cartItemId = variant ? `${item.id}-${variant.size}` : item.id;
+    // Se o item já tem o nome modificado (com tamanho), usar o ID original + nome
+    const cartItemId = variant ? `${item.id}-${variant.size}` : 
+                      item.name.includes('(') ? `${item.id}-${item.name.split('(')[1].split(')')[0].trim()}` : 
+                      item.id;
+    
     const existingItem = cart.find(cartItem => cartItem.id === cartItemId);
     if (existingItem) {
       setCart(cart.map(cartItem =>

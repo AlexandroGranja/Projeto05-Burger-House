@@ -59,7 +59,11 @@ const CartModal = ({ show, closeCart, cart, removeFromCart, addToCart, getTotalP
                       </button>
                       <span className="text-white font-bold min-w-[20px] text-center">{item.quantity}</span>
                       <button 
-                        onClick={() => addToCart(item)}
+                        onClick={() => {
+                          // Criar um item sem variants para evitar problemas
+                          const itemToAdd = { ...item, variants: undefined };
+                          addToCart(itemToAdd);
+                        }}
                         className="w-8 h-8 flex items-center justify-center rounded-full bg-green-600 hover:bg-green-500 transition-colors"
                       >
                         <Plus size={14} className="text-white" />

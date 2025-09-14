@@ -45,13 +45,14 @@ const MenuSection = ({ handleAddItemClick }) => {
   };
 
   const handleVariantSelect = (variant, item) => {
-    const itemWithVariant = {
+    // Criar um item temporário sem variants para evitar loop
+    const itemWithoutVariants = {
       ...item,
+      variants: undefined,
       price: variant.price,
-      selectedVariant: variant.size,
-      displayName: `${item.name} (${variant.size})`
+      name: `${item.name} (${variant.size})`
     };
-    handleAddItemClick(itemWithVariant);
+    handleAddItemClick(itemWithoutVariants);
     setSelectedItem(null);
   };
 
