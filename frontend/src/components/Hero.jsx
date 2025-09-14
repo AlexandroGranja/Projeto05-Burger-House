@@ -1,29 +1,37 @@
 import React, { useState, useEffect } from 'react';
 import { Star, ChevronLeft, ChevronRight } from 'lucide-react';
-import burgerbacon from '../assets/burger-bacon.jpg';
-import burgercalabresa from '../assets/burger-calabresa.jpg';
-import burgerchicken from '../assets/burger-chicken.jpg';
 
-const Hero = () => {
+const Hero = ({ handleAddItemClick }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const promotions = [
     {
-      title: 'Burger Bacon',
-      description: 'Hambúrguer duplo com queijo cheddar e bacon crocante!',
-      price: 'R$ 29,90',
-      image: burgerbacon,
+      id: 2,
+      title: 'Bacon Supreme',
+      description: 'Pão artesanal, hambúrguer 200g, bacon crocante, queijo suíço, molho especial.',
+      price: 34.90,
+      image: '/images/Bacon-Supreme.png',
+      category: 'burgers'
     },
     {
-      title: 'Burger Calabresa',
-      description: 'Hambúrguer vegano com molho especial da casa!',
-      price: 'R$ 24,90',
-      image: burgercalabresa,
+      id: 4,
+      title: 'Double Cheese',
+      description: 'Pão brioche, dois hambúrguers 150g, queijo cheddar duplo, picles e molho burger.',
+      price: 38.90,
+      image: '/images/Double-Cheese.png',
+      category: 'burgers'
     },
     {
-      title: 'Burger Chicken',
-      description: 'Hambúrguer picante com pimenta jalapeño e molho apimentado!',
-      price: 'R$ 27,90',
-      image: burgerchicken,
+      id: 7,
+      title: 'Batata Frita Grande',
+      description: 'Porção família de batatas fritas crocantes, temperadas com ervas finas.',
+      price: 16.90,
+      image: '/images/batata.png',
+      category: 'sides',
+      variants: [
+        { size: "Pequena", price: 8.90, description: "Porção individual" },
+        { size: "Média", price: 12.90, description: "Para compartilhar" },
+        { size: "Grande", price: 16.90, description: "Porção família" }
+      ]
     },
   ];
 
@@ -101,8 +109,11 @@ const Hero = () => {
                       {promo.title}
                     </h3>
                     <p className="text-red-200 font-semibold tracking-wide my-2">{promo.description}</p>
-                    <p className="text-green-400 font-bold text-lg">{promo.price}</p>
-                    <button className="mt-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-red-900 px-6 py-2 rounded-full font-bold hover:from-yellow-300 hover:to-orange-400 transition-all duration-300 shadow-lg">
+                    <p className="text-green-400 font-bold text-lg">R$ {promo.price.toFixed(2)}</p>
+                    <button 
+                      onClick={() => handleAddItemClick && handleAddItemClick(promo)}
+                      className="mt-4 bg-gradient-to-r from-yellow-400 to-orange-500 text-red-900 px-6 py-2 rounded-full font-bold hover:from-yellow-300 hover:to-orange-400 transition-all duration-300 shadow-lg"
+                    >
                       Pedir Agora
                     </button>
                   </div>
