@@ -6,6 +6,7 @@ const Hero = ({ handleAddItemClick }) => {
   const promotions = [
     {
       id: 2,
+      name: 'Bacon Supreme',
       title: 'Bacon Supreme',
       description: 'Pão artesanal, hambúrguer 200g, bacon crocante, queijo suíço, molho especial.',
       price: 34.90,
@@ -14,6 +15,7 @@ const Hero = ({ handleAddItemClick }) => {
     },
     {
       id: 4,
+      name: 'Double Cheese',
       title: 'Double Cheese',
       description: 'Pão brioche, dois hambúrguers 150g, queijo cheddar duplo, picles e molho burger.',
       price: 38.90,
@@ -21,7 +23,26 @@ const Hero = ({ handleAddItemClick }) => {
       category: 'burgers'
     },
     {
+      id: 1,
+      name: 'Burger Clássico',
+      title: 'Burger Clássico',
+      description: 'Pão brioche, hambúrguer 180g, queijo cheddar, alface, tomate, cebola roxa.',
+      price: 28.90,
+      image: '/images/Burger-Classico.png',
+      category: 'burgers'
+    },
+    {
+      id: 11,
+      name: 'Frango Crispy',
+      title: 'Frango Crispy',
+      description: 'Pão brioche, filé de frango empanado super crocante, alface americana e maionese de ervas.',
+      price: 29.90,
+      image: '/images/Frango-Crispy.png',
+      category: 'burgers'
+    },
+    {
       id: 7,
+      name: 'Batata Frita',
       title: 'Batata Frita Grande',
       description: 'Porção família de batatas fritas crocantes, temperadas com ervas finas.',
       price: 16.90,
