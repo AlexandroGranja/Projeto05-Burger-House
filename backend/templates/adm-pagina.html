@@ -1247,8 +1247,103 @@
             <div class="section-content" id="settings-section">
                 <h5 class="mb-4"><i class="fas fa-cog me-2 text-primary"></i>Configurações do Sistema</h5>
 
+                <!-- Informações do Restaurante -->
                 <div class="settings-card">
-                    <h6 class="mb-3">Notificações</h6>
+                    <h6 class="mb-3"><i class="fas fa-store me-2 text-primary"></i>Informações do Restaurante</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Nome do Restaurante</label>
+                                <input type="text" class="form-control" id="restaurant-name" placeholder="Burger House">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Telefone</label>
+                                <input type="tel" class="form-control" id="restaurant-phone" placeholder="(11) 99999-9999">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label">Endereço</label>
+                                <input type="text" class="form-control" id="restaurant-address" placeholder="Rua das Flores, 123 - Centro">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="restaurant-email" placeholder="contato@burgerhouse.com">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Taxa de Entrega (R$)</label>
+                                <input type="number" class="form-control" id="delivery-fee" step="0.01" min="0" placeholder="5.00">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Pedido Mínimo (R$)</label>
+                                <input type="number" class="form-control" id="min-order-value" step="0.01" min="0" placeholder="25.00">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Tempo Estimado (min)</label>
+                                <input type="number" class="form-control" id="estimated-time" min="1" placeholder="30">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Configurações de Pedidos -->
+                <div class="settings-card">
+                    <h6 class="mb-3"><i class="fas fa-shopping-cart me-2 text-primary"></i>Configurações de Pedidos</h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Status Padrão</label>
+                                <select class="form-select" id="default-status">
+                                    <option value="pending">Pendente</option>
+                                    <option value="accepted">Aceito</option>
+                                    <option value="preparing">Preparando</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Timeout de Aceite (min)</label>
+                                <input type="number" class="form-control" id="accept-timeout" min="1" max="60" placeholder="10">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div>
+                            <div class="fw-medium">Aceitação Automática</div>
+                            <small class="text-muted">Aceitar pedidos automaticamente quando recebidos</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="auto-accept">
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div>
+                            <div class="fw-medium">Exigir Confirmação</div>
+                            <small class="text-muted">Solicitar confirmação antes de alterar status do pedido</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="require-confirmation" checked>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notificações -->
+                <div class="settings-card">
+                    <h6 class="mb-3"><i class="fas fa-bell me-2 text-primary"></i>Notificações</h6>
                     <div class="settings-item">
                         <div>
                             <div class="fw-medium">Notificar novos pedidos</div>
@@ -1256,6 +1351,15 @@
                         </div>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="notify-new-orders" checked>
+                        </div>
+                    </div>
+                    <div class="settings-item">
+                        <div>
+                            <div class="fw-medium">Som de Notificação</div>
+                            <small class="text-muted">Reproduzir som quando houver novos pedidos</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="sound-enabled" checked>
                         </div>
                     </div>
                     <div class="settings-item">
@@ -1270,17 +1374,25 @@
                     <div class="settings-item">
                         <div>
                             <div class="fw-medium">Alertas de estoque baixo</div>
-                            <small class="text-muted">Receber alertas quando produtos estiverem com estoque
-                                baixo</small>
+                            <small class="text-muted">Receber alertas quando produtos estiverem com estoque baixo</small>
                         </div>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="low-stock-alerts" checked>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Intervalo de Atualização (segundos)</label>
+                                <input type="number" class="form-control" id="update-interval" min="10" max="300" placeholder="30">
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Integrações -->
                 <div class="settings-card">
-                    <h6 class="mb-3">Integrações</h6>
+                    <h6 class="mb-3"><i class="fas fa-plug me-2 text-primary"></i>Integrações</h6>
                     <div class="settings-item">
                         <div>
                             <div class="fw-medium">WhatsApp Business</div>
@@ -1299,10 +1411,20 @@
                             <input class="form-check-input" type="checkbox" id="n8n-integration" checked>
                         </div>
                     </div>
+                    <div class="settings-item">
+                        <div>
+                            <div class="fw-medium">Email Marketing</div>
+                            <small class="text-muted">Integração com plataformas de email marketing</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="email-integration">
+                        </div>
+                    </div>
                 </div>
 
+                <!-- Preferências de Exibição -->
                 <div class="settings-card">
-                    <h6 class="mb-3">Preferências de Exibição</h6>
+                    <h6 class="mb-3"><i class="fas fa-palette me-2 text-primary"></i>Preferências de Exibição</h6>
                     <div class="settings-item">
                         <div>
                             <div class="fw-medium">Tema escuro</div>
@@ -1315,17 +1437,48 @@
                     <div class="settings-item">
                         <div>
                             <div class="fw-medium">Atualização automática</div>
-                            <small class="text-muted">Atualizar pedidos automaticamente a cada 30 segundos</small>
+                            <small class="text-muted">Atualizar pedidos automaticamente</small>
                         </div>
                         <div class="form-check form-switch">
                             <input class="form-check-input" type="checkbox" id="auto-refresh" checked>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Idioma</label>
+                                <select class="form-select" id="language-select">
+                                    <option value="pt-BR">Português (Brasil)</option>
+                                    <option value="en-US">English (US)</option>
+                                    <option value="es-ES">Español</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <button class="btn btn-secondary">Cancelar</button>
-                    <button class="btn btn-primary" id="save-settings">Salvar Configurações</button>
+                <!-- Botões de Ação -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <div>
+                        <button class="btn btn-outline-secondary" onclick="resetSettings()">
+                            <i class="fas fa-undo me-2"></i>Restaurar Padrões
+                        </button>
+                        <button class="btn btn-outline-info ms-2" onclick="exportSettings()">
+                            <i class="fas fa-download me-2"></i>Exportar
+                        </button>
+                        <input type="file" id="import-settings" accept=".json" style="display: none;" onchange="importSettings(event)">
+                        <button class="btn btn-outline-success ms-2" onclick="document.getElementById('import-settings').click()">
+                            <i class="fas fa-upload me-2"></i>Importar
+                        </button>
+                    </div>
+                    <div>
+                        <button class="btn btn-secondary me-2" onclick="loadSettingsToForm()">
+                            <i class="fas fa-refresh me-2"></i>Recarregar
+                        </button>
+                        <button class="btn btn-primary" id="save-settings">
+                            <i class="fas fa-save me-2"></i>Salvar Configurações
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -2108,9 +2261,276 @@
             window.hoursChart.update();
         }
 
-        function saveSettings() {
-            showToast('Configurações salvas com sucesso!', 'success');
+        // ✅ SISTEMA COMPLETO DE CONFIGURAÇÕES
+        let adminSettings = {
+            notifications: {
+                newOrders: true,
+                emailNotifications: false,
+                lowStockAlerts: true,
+                soundEnabled: true,
+                updateInterval: 30
+            },
+            integrations: {
+                whatsapp: true,
+                n8n: true,
+                email: false
+            },
+            display: {
+                darkTheme: false,
+                autoRefresh: true,
+                language: 'pt-BR',
+                timezone: 'America/Sao_Paulo'
+            },
+            business: {
+                restaurantName: 'Burger House',
+                address: 'Rua das Flores, 123 - Centro',
+                phone: '(11) 99999-9999',
+                email: 'contato@burgerhouse.com',
+                workingHours: {
+                    monday: { open: '11:00', close: '23:00', closed: false },
+                    tuesday: { open: '11:00', close: '23:00', closed: false },
+                    wednesday: { open: '11:00', close: '23:00', closed: false },
+                    thursday: { open: '11:00', close: '23:00', closed: false },
+                    friday: { open: '11:00', close: '00:00', closed: false },
+                    saturday: { open: '11:00', close: '00:00', closed: false },
+                    sunday: { open: '12:00', close: '22:00', closed: false }
+                },
+                deliveryFee: 5.00,
+                minOrderValue: 25.00,
+                estimatedTime: 30
+            },
+            orders: {
+                defaultStatus: 'pending',
+                autoAccept: false,
+                acceptTimeout: 10,
+                requireConfirmation: true
+            }
+        };
+
+        // Carregar configurações do localStorage
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem('burgerHouseAdminSettings');
+                if (saved) {
+                    adminSettings = { ...adminSettings, ...JSON.parse(saved) };
+                }
+                applySettings();
+            } catch (error) {
+                console.error('Erro ao carregar configurações:', error);
+                showToast('Erro ao carregar configurações salvas', 'error');
+            }
         }
+
+        // Salvar configurações no localStorage
+        function saveSettings() {
+            try {
+                // Coletar todos os valores dos formulários
+                collectSettingsFromForm();
+                
+                // Salvar no localStorage
+                localStorage.setItem('burgerHouseAdminSettings', JSON.stringify(adminSettings));
+                
+                // Aplicar configurações imediatamente
+                applySettings();
+                
+                showToast('Configurações salvas com sucesso!', 'success');
+                
+                // Log para demonstração (remover em produção)
+                console.log('Configurações salvas:', adminSettings);
+                
+            } catch (error) {
+                console.error('Erro ao salvar configurações:', error);
+                showToast('Erro ao salvar configurações', 'error');
+            }
+        }
+
+        // Coletar dados do formulário
+        function collectSettingsFromForm() {
+            // Notificações
+            adminSettings.notifications.newOrders = document.getElementById('notify-new-orders').checked;
+            adminSettings.notifications.emailNotifications = document.getElementById('email-notifications').checked;
+            adminSettings.notifications.lowStockAlerts = document.getElementById('low-stock-alerts').checked;
+            adminSettings.notifications.soundEnabled = document.getElementById('sound-enabled')?.checked ?? true;
+            adminSettings.notifications.updateInterval = parseInt(document.getElementById('update-interval')?.value) || 30;
+
+            // Integrações
+            adminSettings.integrations.whatsapp = document.getElementById('whatsapp-integration').checked;
+            adminSettings.integrations.n8n = document.getElementById('n8n-integration').checked;
+            adminSettings.integrations.email = document.getElementById('email-integration')?.checked ?? false;
+
+            // Exibição
+            adminSettings.display.darkTheme = document.getElementById('dark-theme').checked;
+            adminSettings.display.autoRefresh = document.getElementById('auto-refresh').checked;
+            adminSettings.display.language = document.getElementById('language-select')?.value || 'pt-BR';
+
+            // Informações do negócio
+            adminSettings.business.restaurantName = document.getElementById('restaurant-name')?.value || 'Burger House';
+            adminSettings.business.address = document.getElementById('restaurant-address')?.value || '';
+            adminSettings.business.phone = document.getElementById('restaurant-phone')?.value || '';
+            adminSettings.business.email = document.getElementById('restaurant-email')?.value || '';
+            adminSettings.business.deliveryFee = parseFloat(document.getElementById('delivery-fee')?.value) || 5.00;
+            adminSettings.business.minOrderValue = parseFloat(document.getElementById('min-order-value')?.value) || 25.00;
+            adminSettings.business.estimatedTime = parseInt(document.getElementById('estimated-time')?.value) || 30;
+
+            // Configurações de pedidos
+            adminSettings.orders.defaultStatus = document.getElementById('default-status')?.value || 'pending';
+            adminSettings.orders.autoAccept = document.getElementById('auto-accept')?.checked ?? false;
+            adminSettings.orders.acceptTimeout = parseInt(document.getElementById('accept-timeout')?.value) || 10;
+            adminSettings.orders.requireConfirmation = document.getElementById('require-confirmation')?.checked ?? true;
+        }
+
+        // Aplicar configurações carregadas
+        function applySettings() {
+            // Aplicar tema
+            if (adminSettings.display.darkTheme) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+
+            // Aplicar configurações de notificação
+            if (adminSettings.notifications.soundEnabled) {
+                // Implementar som de notificação
+                console.log('Som de notificação ativado');
+            }
+
+            // Aplicar intervalo de atualização
+            if (adminSettings.display.autoRefresh) {
+                const interval = adminSettings.notifications.updateInterval * 1000;
+                if (window.refreshInterval) {
+                    clearInterval(window.refreshInterval);
+                }
+                window.refreshInterval = setInterval(() => {
+                    if (currentSection === 'orders') {
+                        handleRefresh();
+                    }
+                }, interval);
+            }
+
+            // Aplicar configurações de pedidos
+            if (adminSettings.orders.autoAccept) {
+                console.log('Aceitação automática de pedidos ativada');
+            }
+        }
+
+        // Carregar configurações nos campos do formulário
+        function loadSettingsToForm() {
+            // Notificações
+            document.getElementById('notify-new-orders').checked = adminSettings.notifications.newOrders;
+            document.getElementById('email-notifications').checked = adminSettings.notifications.emailNotifications;
+            document.getElementById('low-stock-alerts').checked = adminSettings.notifications.lowStockAlerts;
+            if (document.getElementById('sound-enabled')) {
+                document.getElementById('sound-enabled').checked = adminSettings.notifications.soundEnabled;
+            }
+            if (document.getElementById('update-interval')) {
+                document.getElementById('update-interval').value = adminSettings.notifications.updateInterval;
+            }
+
+            // Integrações
+            document.getElementById('whatsapp-integration').checked = adminSettings.integrations.whatsapp;
+            document.getElementById('n8n-integration').checked = adminSettings.integrations.n8n;
+            if (document.getElementById('email-integration')) {
+                document.getElementById('email-integration').checked = adminSettings.integrations.email;
+            }
+
+            // Exibição
+            document.getElementById('dark-theme').checked = adminSettings.display.darkTheme;
+            document.getElementById('auto-refresh').checked = adminSettings.display.autoRefresh;
+            if (document.getElementById('language-select')) {
+                document.getElementById('language-select').value = adminSettings.display.language;
+            }
+
+            // Informações do negócio
+            if (document.getElementById('restaurant-name')) {
+                document.getElementById('restaurant-name').value = adminSettings.business.restaurantName;
+            }
+            if (document.getElementById('restaurant-address')) {
+                document.getElementById('restaurant-address').value = adminSettings.business.address;
+            }
+            if (document.getElementById('restaurant-phone')) {
+                document.getElementById('restaurant-phone').value = adminSettings.business.phone;
+            }
+            if (document.getElementById('restaurant-email')) {
+                document.getElementById('restaurant-email').value = adminSettings.business.email;
+            }
+            if (document.getElementById('delivery-fee')) {
+                document.getElementById('delivery-fee').value = adminSettings.business.deliveryFee;
+            }
+            if (document.getElementById('min-order-value')) {
+                document.getElementById('min-order-value').value = adminSettings.business.minOrderValue;
+            }
+            if (document.getElementById('estimated-time')) {
+                document.getElementById('estimated-time').value = adminSettings.business.estimatedTime;
+            }
+
+            // Configurações de pedidos
+            if (document.getElementById('default-status')) {
+                document.getElementById('default-status').value = adminSettings.orders.defaultStatus;
+            }
+            if (document.getElementById('auto-accept')) {
+                document.getElementById('auto-accept').checked = adminSettings.orders.autoAccept;
+            }
+            if (document.getElementById('accept-timeout')) {
+                document.getElementById('accept-timeout').value = adminSettings.orders.acceptTimeout;
+            }
+            if (document.getElementById('require-confirmation')) {
+                document.getElementById('require-confirmation').checked = adminSettings.orders.requireConfirmation;
+            }
+        }
+
+        // Funções auxiliares para configurações
+        function resetSettings() {
+            if (confirm('Tem certeza que deseja restaurar as configurações padrão? Esta ação não pode ser desfeita.')) {
+                localStorage.removeItem('burgerHouseAdminSettings');
+                location.reload();
+            }
+        }
+
+        function exportSettings() {
+            try {
+                const settings = JSON.stringify(adminSettings, null, 2);
+                const blob = new Blob([settings], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'burger-house-settings.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Configurações exportadas com sucesso!', 'success');
+            } catch (error) {
+                console.error('Erro ao exportar configurações:', error);
+                showToast('Erro ao exportar configurações', 'error');
+            }
+        }
+
+        function importSettings(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const importedSettings = JSON.parse(e.target.result);
+                        adminSettings = { ...adminSettings, ...importedSettings };
+                        localStorage.setItem('burgerHouseAdminSettings', JSON.stringify(adminSettings));
+                        loadSettingsToForm();
+                        applySettings();
+                        showToast('Configurações importadas com sucesso!', 'success');
+                    } catch (error) {
+                        console.error('Erro ao importar configurações:', error);
+                        showToast('Erro ao importar configurações. Verifique o arquivo.', 'error');
+                    }
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Inicializar configurações quando a página carregar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSettings();
+            loadSettingsToForm();
+        });
 
         function getStatusText(status) {
             const statusMap = {
