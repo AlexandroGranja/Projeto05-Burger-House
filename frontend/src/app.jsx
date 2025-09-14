@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 // Importando os dados
 import { menuItems, sides } from './data/menuData';
@@ -14,8 +14,28 @@ import CartModal from './components/CartModal';
 import CheckoutModal from './components/CheckoutModal';
 
 function App() {
+  // Função para carregar carrinho do localStorage
+  const loadCartFromStorage = () => {
+    try {
+      const savedCart = localStorage.getItem('burgerHouseCart');
+      return savedCart ? JSON.parse(savedCart) : [];
+    } catch (error) {
+      console.error('Erro ao carregar carrinho do localStorage:', error);
+      return [];
+    }
+  };
+
+  // Função para salvar carrinho no localStorage
+  const saveCartToStorage = (cartData) => {
+    try {
+      localStorage.setItem('burgerHouseCart', JSON.stringify(cartData));
+    } catch (error) {
+      console.error('Erro ao salvar carrinho no localStorage:', error);
+    }
+  };
+
   // O estado e a lógica de negócio ficam no componente pai (App)
-  const [cart, setCart] = useState([]);
+  const [cart, setCart] = useState(loadCartFromStorage);
   const [showCart, setShowCart] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [customerData, setCustomerData] = useState({
@@ -27,6 +47,11 @@ function App() {
     paymentMethod: 'dinheiro'
   });
   const [selectedItemWithOptions, setSelectedItemWithOptions] = useState(null);
+
+  // Salvar carrinho no localStorage sempre que ele mudar
+  useEffect(() => {
+    saveCartToStorage(cart);
+  }, [cart]);
 
   const addToCart = (item, variant = null) => {
     // Se o item já tem o nome modificado (com tamanho), usar o ID original + nome
@@ -104,6 +129,7 @@ function App() {
       if (response.ok) {
         alert('Pedido realizado com sucesso!');
         setCart([]);
+        localStorage.removeItem('burgerHouseCart'); // Limpar carrinho do localStorage
         setShowCheckout(false);
         setCustomerData({ name: '', phone: '', address: '', neighborhood: '', complement: '', paymentMethod: 'dinheiro' });
       } else {
